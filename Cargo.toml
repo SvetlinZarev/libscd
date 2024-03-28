@@ -1,0 +1,15 @@
+[package]
+name = "libscd"
+version = "0.0.0"
+edition = "2021"
+
+authors = ["Svetlin Zarev <svetlin@zarev.net>"]
+repository = "https://github.com/SvetlinZarev/libscd"
+license = "MIT OR Apache-2.0"
+description = "Rust drivers for various SCD devises such as scd30 and scd4x CO2 sensors"
+keywords = ["scd30", "scd40", "scd41", "sensirion", "driver"]
+categories = ["embedded", "no-std"]
+readme = "README.md"
+
+
+[dependencies]

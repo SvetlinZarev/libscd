@@ -1,0 +1,10 @@
+### Ignore
+/.idea
+/target
+
+**/.*
+**/*.iml
+
+### Exceptions
+!.gitignore
+!.cargo

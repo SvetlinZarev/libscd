@@ -11,7 +11,7 @@ keywords = ["scd30", "scd40", "scd41", "sensirion", "driver"]
 categories = ["embedded", "no-std"]
 readme = "README.md"
 
-exclude = ["/datasheets"]
+exclude = ["/datasheets", "/.github"]
 
 [features]
 defmt = ["dep:defmt"]

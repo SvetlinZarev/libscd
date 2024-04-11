@@ -19,6 +19,6 @@ pub struct Command(u16);
 
 impl Command {
     pub fn to_be_bytes(self) -> [u8; 2] {
-        return self.0.to_be_bytes();
+        self.0.to_be_bytes()
     }
 }

@@ -522,7 +522,7 @@ where
     }
 
     async fn set_ambient_pressure(&mut self, pressure: u32) -> Result<(), Error<E>> {
-        if pressure < 70_000 || pressure > 120_000 {
+        if !(70_000..=120_000).contains(&pressure) {
             return Err(Error::InvalidInput);
         }
 

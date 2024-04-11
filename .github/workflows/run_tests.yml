@@ -13,6 +13,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: "clippy"
+          targets: "thumbv7em-none-eabihf"
 
       - name: Test all features
         run: cargo test --all-features

@@ -15,7 +15,8 @@ use crate::internal::scd4x::{
     START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT, WAKE_UP,
 };
 
-pub use crate::internal::scd4x::Measurement;
+pub use crate::internal::measurement::Measurement;
+
 #[cfg(feature = "scd40")]
 pub struct Scd40<I2C, D> {
     inner: Scd4x<I2C, D>,

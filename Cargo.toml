@@ -11,12 +11,13 @@ keywords = ["scd30", "scd40", "scd41", "sensirion", "driver"]
 categories = ["embedded", "no-std"]
 readme = "README.md"
 
-exclude = ["/datasheets", "/.github"]
+exclude = ["/datasheets", "**/.*"]
 
 [features]
 defmt = ["dep:defmt"]
 sync = ["dep:embedded-hal"]
 async = ["dep:embedded-hal-async"]
+scd30 = []
 scd40 = []
 scd41 = []
 

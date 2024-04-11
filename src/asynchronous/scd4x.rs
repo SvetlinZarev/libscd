@@ -15,7 +15,7 @@ use crate::internal::scd4x::{
     START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT, WAKE_UP,
 };
 
-pub use crate::internal::scd4x::Measurement;
+pub use crate::internal::measurement::Measurement;
 
 #[cfg(feature = "scd40")]
 pub struct Scd40<I2C, D> {
@@ -518,8 +518,9 @@ where
         Ok(())
     }
 
-   async  fn set_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, enabled as u16).await?;
+    async fn set_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, enabled as u16)
+            .await?;
         Ok(())
     }
 

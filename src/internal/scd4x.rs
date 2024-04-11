@@ -76,11 +76,3 @@ pub fn decode_serial_number(buf: [u8; 9]) -> u64 {
         | u64::from(buf[6]) << 8
         | u64::from(buf[7])
 }
-
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub struct Measurement {
-    pub temperature: f32,
-    pub humidity: f32,
-    pub co2: u16,
-}

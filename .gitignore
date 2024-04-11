@@ -1,7 +1,7 @@
 ### Ignore
 /.idea
 /target
-
+/examples/**/target
 **/.*
 **/*.iml
 

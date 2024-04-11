@@ -37,3 +37,7 @@ jobs:
 
       - name: Test async SCD41
         run: cargo test --features "async, scd41"
+
+      - name: Build example - Synchronous SCD40
+        working-directory: ./examples/embassy-scd40
+        run: cargo build

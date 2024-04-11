@@ -3,13 +3,14 @@ use embedded_hal::i2c::I2c;
 
 use crate::error::Error;
 use crate::internal::crc::{crc8, crc8_verify_chunked_3};
-pub use crate::internal::measurement::Measurement;
 use crate::internal::scd30::{
     Command, GET_DATA_READY_STATUS, I2C_ADDRESS, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
     READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
     SET_FORCED_RECALIBRATION_VALUE, SET_MEASUREMENT_INTERVAL, SET_TEMPERATURE_OFFSET, SOFT_RESET,
     START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT,
 };
+
+pub use crate::internal::measurement::Measurement;
 
 pub struct Scd30<I2C, D> {
     i2c: I2C,

@@ -1,5 +1,5 @@
 name: test suite
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
   test:
@@ -14,8 +14,26 @@ jobs:
         with:
           components: "clippy"
 
-      - name: cargo test
+      - name: Test all features
         run: cargo test --all-features
 
       - name: Run Clippy
         run: cargo clippy --all-features
+
+      - name: Test sync SCD30
+        run: cargo test --features "sync, scd30"
+
+      - name: Test async SCD30
+        run: cargo test --features "async, scd30"
+
+      - name: Test sync SCD40
+        run: cargo test --features "sync, scd40"
+
+      - name: Test async SCD40
+        run: cargo test --features "async, scd40"
+
+      - name: Test sync SCD41
+        run: cargo test --features "sync, scd41"
+
+      - name: Test async SCD41
+        run: cargo test --features "async, scd41"

@@ -34,6 +34,11 @@ where
         }
     }
 
+    /// Release the I2C bus held by this sensor
+    pub fn release(self) -> I2C {
+        self.inner.release()
+    }
+
     /// Start periodic measurement mode. The signal update interval is 5 seconds.
     pub async fn start_periodic_measurement(&mut self) -> Result<(), Error<E>> {
         self.inner.start_periodic_measurement().await
@@ -173,6 +178,11 @@ where
         Self {
             inner: Scd4x::new(i2c, delay),
         }
+    }
+
+    /// Release the I2C bus held by this sensor
+    pub fn release(self) -> I2C {
+        self.inner.release()
     }
 
     /// Start periodic measurement mode. The signal update interval is 5 seconds.
@@ -377,6 +387,10 @@ where
             delay,
             measurement_started: false,
         }
+    }
+
+    fn release(self) -> I2C {
+        self.i2c
     }
 
     async fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {

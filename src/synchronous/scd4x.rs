@@ -3,6 +3,7 @@ use embedded_hal::i2c::I2c;
 
 use crate::error::Error;
 use crate::internal::crc::{crc8, crc8_verify_chunked_3};
+pub use crate::internal::measurement::Measurement;
 use crate::internal::scd4x::{
     decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
     GET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, GET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD,
@@ -14,8 +15,6 @@ use crate::internal::scd4x::{
     SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
     START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT, WAKE_UP,
 };
-
-pub use crate::internal::measurement::Measurement;
 
 #[cfg(feature = "scd40")]
 pub struct Scd40<I2C, D> {
@@ -32,6 +31,11 @@ where
         Self {
             inner: Scd4x::new(i2c, delay),
         }
+    }
+
+    /// Release the I2C bus held by this sensor
+    pub fn release(self) -> I2C {
+        self.inner.release()
     }
 
     /// Start periodic measurement mode. The signal update interval is 5 seconds.
@@ -173,6 +177,11 @@ where
         Self {
             inner: Scd4x::new(i2c, delay),
         }
+    }
+
+    /// Release the I2C bus held by this sensor
+    pub fn release(self) -> I2C {
+        self.inner.release()
     }
 
     /// Start periodic measurement mode. The signal update interval is 5 seconds.
@@ -369,6 +378,10 @@ where
             delay,
             measurement_started: false,
         }
+    }
+
+    fn release(self) -> I2C {
+        self.i2c
     }
 
     fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {

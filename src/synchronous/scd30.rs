@@ -25,6 +25,11 @@ where
         Self { i2c, delay }
     }
 
+    /// Release the I2C bus held by this sensor
+    pub fn release(self) -> I2C {
+        self.i2c
+    }
+
     fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
         self.i2c
             .write(I2C_ADDRESS, &cmd.to_be_bytes())

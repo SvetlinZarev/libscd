@@ -2,19 +2,20 @@ name: test suite
 on: [push, pull_request]
 
 jobs:
-  clippy:
-    name: cargo clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: "clippy"
-      - run: cargo clippy --all-features
   test:
     name: cargo test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --all-features
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: "clippy"
+
+      - name: cargo test
+        run: cargo test --all-features
+
+      - name: Run Clippy
+        run: cargo clippy --all-features

@@ -12,6 +12,9 @@ use crate::internal::scd30::{
 
 pub use crate::internal::measurement::Measurement;
 
+/// Driver implementation for the SCD30 CO2 sensor.
+///
+/// This sensor needs to be enabled via the `scd30` feature flag
 pub struct Scd30<I2C, D> {
     i2c: I2C,
     delay: D,
@@ -22,6 +25,7 @@ where
     I2C: I2c<Error = E>,
     D: DelayNs,
 {
+    /// Create a new SCD30 sensor using the provided I2C and delay implementations
     pub fn new(i2c: I2C, delay: D) -> Self {
         Self { i2c, delay }
     }

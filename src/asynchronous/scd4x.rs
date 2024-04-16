@@ -22,6 +22,10 @@ use crate::internal::scd4x::{
     WAKE_UP,
 };
 
+/// Driver implementation for the SCD40 CO2 sensor. This driver is compatible
+/// with SCD41 devices, though it does not expose the SCD41 additional APIs
+///
+/// This sensor needs to be enabled via the `scd40` feature flag
 #[cfg(feature = "scd40")]
 pub struct Scd40<I2C, D> {
     inner: Scd4x<I2C, D>,
@@ -33,6 +37,7 @@ where
     I2C: I2c<Error = E>,
     D: DelayNs,
 {
+    /// Create a new sensor using the provided I2C bus and delay implementation
     pub fn new(i2c: I2C, delay: D) -> Self {
         Self {
             inner: Scd4x::new(i2c, delay),
@@ -63,6 +68,7 @@ where
         self.inner.start_low_power_periodic_measurement().await
     }
 
+    /// Check if there is a measurement data ready to be read
     pub async fn data_ready(&mut self) -> Result<bool, Error<E>> {
         self.inner.data_ready().await
     }
@@ -78,10 +84,12 @@ where
         self.inner.read_measurement().await
     }
 
+    /// Configure the temperature offset
     pub async fn set_temperature_offset(&mut self, offset: f32) -> Result<(), Error<E>> {
         self.inner.set_temperature_offset(offset).await
     }
 
+    /// Retrieve the configured temperature offset
     pub async fn get_temperature_offset(&mut self) -> Result<f32, Error<E>> {
         self.inner.get_temperature_offset().await
     }
@@ -122,6 +130,7 @@ where
         self.inner.set_automatic_self_calibration(enabled).await
     }
 
+    /// Check if the automatic self calibration algorithm is enabled
     pub async fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         self.inner.get_automatic_self_calibration().await
     }
@@ -168,6 +177,11 @@ where
     }
 }
 
+/// Driver implementation for the SCD41 CO2 sensor. This driver is compatible
+/// with SCD40 devices, though it exposes operations that are not available on
+/// SCD40
+///
+/// This sensor needs to be enabled via the `scd41` feature flag
 #[cfg(feature = "scd41")]
 pub struct Scd41<I2C, D> {
     inner: Scd4x<I2C, D>,
@@ -179,6 +193,7 @@ where
     I2C: I2c<Error = E>,
     D: DelayNs,
 {
+    /// Create a new sensor using the provided I2C bus and delay implementation
     pub fn new(i2c: I2C, delay: D) -> Self {
         Self {
             inner: Scd4x::new(i2c, delay),
@@ -209,6 +224,7 @@ where
         self.inner.start_low_power_periodic_measurement().await
     }
 
+    /// Check if there is a measurement data ready to be read
     pub async fn data_ready(&mut self) -> Result<bool, Error<E>> {
         self.inner.data_ready().await
     }
@@ -224,10 +240,12 @@ where
         self.inner.read_measurement().await
     }
 
+    /// Configure the temperature offset
     pub async fn set_temperature_offset(&mut self, offset: f32) -> Result<(), Error<E>> {
         self.inner.set_temperature_offset(offset).await
     }
 
+    /// Retrieve the configured temperature offset
     pub async fn get_temperature_offset(&mut self) -> Result<f32, Error<E>> {
         self.inner.get_temperature_offset().await
     }
@@ -268,6 +286,7 @@ where
         self.inner.set_automatic_self_calibration(enabled).await
     }
 
+    /// Check if the automatic self calibration algorithm is enabled
     pub async fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         self.inner.get_automatic_self_calibration().await
     }

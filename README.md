@@ -14,7 +14,7 @@ Add the crate as a dependency in `Cargo.toml`
 
 ```toml
 [dependencies.libscd]
-version = "0.2.0"
+version = "0.3"
 features = []
 ```
 

@@ -1,6 +1,6 @@
 [package]
 name = "libscd"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 
 authors = ["Svetlin Zarev"]
@@ -12,6 +12,9 @@ categories = ["embedded", "no-std"]
 readme = "README.md"
 
 exclude = ["/datasheets", "/examples", "**/.*"]
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 defmt = ["dep:defmt"]

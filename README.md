@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/crates/l/libscd)
 ![Version](https://img.shields.io/crates/v/libscd)
-![Downloads](https://img.shields.io/crates/dv/libscd)
+![Downloads](https://img.shields.io/crates/d/libscd)
 ![Build](https://img.shields.io/github/actions/workflow/status/SvetlinZarev/libscd/run_tests.yml)
 
 LibSCD is s Rust driver implementation for SCD30, SCD40 and SCD41 sensors

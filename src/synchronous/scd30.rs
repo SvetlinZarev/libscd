@@ -4,9 +4,9 @@ use embedded_hal::i2c::I2c;
 use crate::error::Error;
 use crate::internal::crc::{crc8, crc8_verify_chunked_3};
 use crate::internal::scd30::{
-    Command, GET_DATA_READY_STATUS, I2C_ADDRESS, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
-    READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
-    SET_FORCED_RECALIBRATION_VALUE, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET, SOFT_RESET,
+    Command, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
+    I2C_ADDRESS, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS, READ_FIRMWARE_VERSION,
+    READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
     START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT,
 };
 
@@ -89,7 +89,7 @@ where
         &mut self,
         ambient_pressure_hpa: u16,
     ) -> Result<(), Error<E>> {
-        if !(700..=1400).contains(&ambient_pressure_hpa) {
+        if !(700..=1400).contains(&ambient_pressure_hpa) && 0 != ambient_pressure_hpa {
             return Err(Error::InvalidInput);
         }
 

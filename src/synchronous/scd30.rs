@@ -6,7 +6,7 @@ use crate::internal::crc::{crc8, crc8_verify_chunked_3};
 use crate::internal::scd30::{
     Command, GET_DATA_READY_STATUS, I2C_ADDRESS, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
     READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
-    SET_FORCED_RECALIBRATION_VALUE, SET_MEASUREMENT_INTERVAL, SET_TEMPERATURE_OFFSET, SOFT_RESET,
+    SET_FORCED_RECALIBRATION_VALUE, GET_SET_MEASUREMENT_INTERVAL, SET_TEMPERATURE_OFFSET, SOFT_RESET,
     START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT,
 };
 
@@ -116,9 +116,17 @@ where
             return Err(Error::InvalidInput);
         }
 
-        self.write_command_with_data(SET_MEASUREMENT_INTERVAL, interval_seconds)?;
+        self.write_command_with_data(GET_SET_MEASUREMENT_INTERVAL, interval_seconds)?;
 
         Ok(())
+    }
+
+    /// Retrieve the configured measurement interval
+    pub fn get_measurement_interval(&mut self) -> Result<u16, Error<E>> {
+        let mut buf = [0; 3];
+        self.read_command(GET_SET_MEASUREMENT_INTERVAL, &mut buf)?;
+
+        Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
     /// Data ready command is used to determine if a measurement can be read

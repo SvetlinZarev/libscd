@@ -38,11 +38,11 @@ async fn main(_spawner: Spawner) {
     let mut scd = Scd40::new(i2c, Delay);
 
     // When re-programming, the controller will be restarted,
-    // bit not the sensor. We try to stop it in order to
+    // but not the sensor. We try to stop it in order to
     // prevent the rest of the commands failing.
     _ = scd.stop_periodic_measurement();
 
-    info!("Sensor serial: {:?}", scd.serial_number());
+    info!("Sensor serial number: {:?}", scd.serial_number());
     if let Err(e) = scd.start_periodic_measurement() {
         defmt::panic!("Failed to start periodic measurement: {:?}", e);
     }

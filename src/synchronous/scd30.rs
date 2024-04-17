@@ -6,7 +6,7 @@ use crate::internal::crc::{crc8, crc8_verify_chunked_3};
 use crate::internal::scd30::{
     Command, GET_DATA_READY_STATUS, I2C_ADDRESS, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
     READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
-    SET_FORCED_RECALIBRATION_VALUE, GET_SET_MEASUREMENT_INTERVAL, SET_TEMPERATURE_OFFSET, SOFT_RESET,
+    SET_FORCED_RECALIBRATION_VALUE, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET, SOFT_RESET,
     START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT,
 };
 
@@ -232,8 +232,16 @@ where
     ///
     /// Unit: C * 100 => one tick corresponds to 0.01 degrees Celsius
     pub fn set_temperature_offset(&mut self, offset: u16) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_TEMPERATURE_OFFSET, offset)?;
+        self.write_command_with_data(GET_SET_TEMPERATURE_OFFSET, offset)?;
         Ok(())
+    }
+
+    /// Retrieve the configured temperature offset
+    pub fn get_temperature_offset(&mut self) -> Result<u16, Error<E>> {
+        let mut buf = [0; 3];
+        self.read_command(GET_SET_TEMPERATURE_OFFSET, &mut buf)?;
+
+        Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
     /// Measurements of CO2 concentration based on the NDIR principle are

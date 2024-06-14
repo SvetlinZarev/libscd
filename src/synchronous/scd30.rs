@@ -153,7 +153,7 @@ where
     /// delay of > 3ms following the write sequence. Make sure that the
     /// measurement is completed by reading the data ready status bit
     /// before read out.
-    pub fn measurement(&mut self) -> Result<Measurement, Error<E>> {
+    pub fn read_measurement(&mut self) -> Result<Measurement, Error<E>> {
         let mut buf = [0; 18];
         self.read_command(READ_MEASUREMENT, &mut buf)?;
 

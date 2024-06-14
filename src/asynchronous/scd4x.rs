@@ -126,8 +126,8 @@ where
     /// Set the current state (enabled / disabled) of the ASC. By default,
     /// ASC is enabled. To save the setting to the EEPROM, the
     /// `persist_settings()` (see Section 3.9.1) command must be issued.
-    pub async fn set_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
-        self.inner.set_automatic_self_calibration(enabled).await
+    pub async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+        self.inner.enable_automatic_self_calibration(enabled).await
     }
 
     /// Check if the automatic self calibration algorithm is enabled
@@ -282,8 +282,8 @@ where
     /// Set the current state (enabled / disabled) of the ASC. By default,
     /// ASC is enabled. To save the setting to the EEPROM, the
     /// `persist_settings()` (see Section 3.9.1) command must be issued.
-    pub async fn set_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
-        self.inner.set_automatic_self_calibration(enabled).await
+    pub async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+        self.inner.enable_automatic_self_calibration(enabled).await
     }
 
     /// Check if the automatic self calibration algorithm is enabled
@@ -556,7 +556,7 @@ where
         Ok(())
     }
 
-    async fn set_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+    async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
         self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, enabled as u16)
             .await?;
         Ok(())

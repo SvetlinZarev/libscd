@@ -198,6 +198,15 @@ where
         Ok(())
     }
 
+    /// Check if the automatic self calibration algorithm is enabled
+    pub fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
+        let mut buf = [0; 3];
+        self.read_command(MANAGE_AUTOMATIC_SELF_CALIBRATION, &mut buf)?;
+
+        let raw_status = u16::from_be_bytes([buf[0], buf[1]]);
+        Ok(raw_status != 0)
+    }
+
     /// Forced recalibration (FRC) is used to compensate for sensor drifts when
     /// a reference value of the CO2 concentration in close proximity to the
     /// SCD30 is available. For best results, the sensor has to be run in a

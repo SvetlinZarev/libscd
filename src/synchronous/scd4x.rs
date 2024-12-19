@@ -7,11 +7,13 @@ pub use crate::internal::scd4x::I2C_ADDRESS;
 use crate::error::Error;
 use crate::internal::crc::{crc8, crc8_verify_chunked_3};
 use crate::internal::scd4x::{
-    decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_DATA_READY_STATUS,
-    GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET,
+    decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
+    GET_AUTOMATIC_SELF_CALIBRATION_TARGET, GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE,
+    GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION,
     PERFORM_SELF_TEST, PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
-    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET,
-    START_LOW_POWER_PERIODIC_MEASUREMENT, START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
+    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_AUTOMATIC_SELF_CALIBRATION_TARGET,
+    SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
+    START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
 #[cfg(feature = "scd41")]
 use crate::internal::scd4x::{
@@ -132,6 +134,27 @@ where
     /// Check if the automatic self calibration algorithm is enabled
     pub fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         self.inner.get_automatic_self_calibration()
+    }
+
+    /// The `set_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It sets the value of the ASC baseline target.
+    /// This is the lower-bound background CO2 concentration the sensor is exposed
+    /// to regularly. The default value is 400.
+    pub fn set_automatic_self_calibration_target(&mut self, ppm_co2: u16) -> Result<(), Error<E>> {
+        self.inner.set_automatic_self_calibration_target(ppm_co2);
+    }
+
+    /// The `get_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
+    pub fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        self.inner.get_automatic_self_calibration_target();
+    }
+
+    /// The `perform_forced_recalibration()` command can be sent when the SCD4x
+    /// is in idle mode after having been in operation for at least 3 minutes in
+    /// an environment with a homogenous and constant CO2 concentration.
+    pub fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
+        self.inner.perform_forced_recalibration();
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude
@@ -288,6 +311,27 @@ where
     /// Check if the automatic self calibration algorithm is enabled
     pub fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         self.inner.get_automatic_self_calibration()
+    }
+
+    /// The `set_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It sets the value of the ASC baseline target.
+    /// This is the lower-bound background CO2 concentration the sensor is exposed
+    /// to regularly. The default value is 400.
+    pub fn set_automatic_self_calibration_target(&mut self, ppm_co2: u16) -> Result<(), Error<E>> {
+        self.inner.set_automatic_self_calibration_target(ppm_co2);
+    }
+
+    /// The `get_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
+    pub fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        self.inner.get_automatic_self_calibration_target();
+    }
+
+    /// The `perform_forced_recalibration()` command can be sent when the SCD4x
+    /// is in idle mode after having been in operation for at least 3 minutes in
+    /// an environment with a homogenous and constant CO2 concentration.
+    pub fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
+        self.inner.perform_forced_recalibration();
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude
@@ -549,6 +593,23 @@ where
 
         let raw_status = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(raw_status != 0)
+    }
+
+    fn set_automatic_self_calibration_target(&mut self, ppm_co2: u16) -> Result<(), Error<E>> {
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_TARGET, ppm_co2)?;
+        Ok(())
+    }
+
+    fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        let mut buf = [0; 3];
+        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, &mut buf)?;
+
+        Ok(u16::from_be_bytes([buf[0], buf[1]]))
+    }
+
+    fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
+        self.write_command(PERFORM_FORCED_RECALIBRATION);
+        Ok(())
     }
 
     fn persists_settings(&mut self) -> Result<(), Error<E>> {

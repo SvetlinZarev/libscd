@@ -7,11 +7,13 @@ pub use crate::internal::scd4x::I2C_ADDRESS;
 use crate::error::Error;
 use crate::internal::crc::{crc8, crc8_verify_chunked_3};
 use crate::internal::scd4x::{
-    decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_DATA_READY_STATUS,
-    GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET,
+    decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
+    GET_AUTOMATIC_SELF_CALIBRATION_TARGET, GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE,
+    GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION,
     PERFORM_SELF_TEST, PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
-    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET,
-    START_LOW_POWER_PERIODIC_MEASUREMENT, START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
+    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_AUTOMATIC_SELF_CALIBRATION_TARGET,
+    SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
+    START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
 
 #[cfg(feature = "scd41")]
@@ -126,8 +128,37 @@ where
     /// Set the current state (enabled / disabled) of the ASC. By default,
     /// ASC is enabled. To save the setting to the EEPROM, the
     /// `persist_settings()` (see Section 3.9.1) command must be issued.
-    pub async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+    pub async fn enable_automatic_self_calibration(
+        &mut self,
+        enabled: bool,
+    ) -> Result<(), Error<E>> {
         self.inner.enable_automatic_self_calibration(enabled).await
+    }
+
+    /// The `set_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It sets the value of the ASC baseline target.
+    /// This is the lower-bound background CO2 concentration the sensor is exposed
+    /// to regularly. The default value is 400.
+    pub async fn set_automatic_self_calibration_target(
+        &mut self,
+        ppm_co2: u16,
+    ) -> Result<(), Error<E>> {
+        self.inner
+            .set_automatic_self_calibration_target(ppm_co2)
+            .await;
+    }
+
+    /// The `get_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
+    pub async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        self.inner.get_automatic_self_calibration_target().await;
+    }
+
+    /// The `perform_forced_recalibration()` command can be sent when the SCD4x
+    /// is in idle mode after having been in operation for at least 3 minutes in
+    /// an environment with a homogenous and constant CO2 concentration.
+    pub async fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
+        self.inner.perform_forced_recalibration().await;
     }
 
     /// Check if the automatic self calibration algorithm is enabled
@@ -282,13 +313,42 @@ where
     /// Set the current state (enabled / disabled) of the ASC. By default,
     /// ASC is enabled. To save the setting to the EEPROM, the
     /// `persist_settings()` (see Section 3.9.1) command must be issued.
-    pub async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+    pub async fn enable_automatic_self_calibration(
+        &mut self,
+        enabled: bool,
+    ) -> Result<(), Error<E>> {
         self.inner.enable_automatic_self_calibration(enabled).await
     }
 
     /// Check if the automatic self calibration algorithm is enabled
     pub async fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         self.inner.get_automatic_self_calibration().await
+    }
+
+    /// The `set_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It sets the value of the ASC baseline target.
+    /// This is the lower-bound background CO2 concentration the sensor is exposed
+    /// to regularly. The default value is 400.
+    pub async fn set_automatic_self_calibration_target(
+        &mut self,
+        ppm_co2: u16,
+    ) -> Result<(), Error<E>> {
+        self.inner
+            .set_automatic_self_calibration_target(ppm_co2)
+            .await;
+    }
+
+    /// The `get_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
+    pub async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        self.inner.get_automatic_self_calibration_target().await;
+    }
+
+    /// The `perform_forced_recalibration()` command can be sent when the SCD4x
+    /// is in idle mode after having been in operation for at least 3 minutes in
+    /// an environment with a homogenous and constant CO2 concentration.
+    pub async fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
+        self.inner.perform_forced_recalibration().await;
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude
@@ -569,6 +629,28 @@ where
 
         let raw_status = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(raw_status != 0)
+    }
+
+    async fn set_automatic_self_calibration_target(
+        &mut self,
+        ppm_co2: u16,
+    ) -> Result<(), Error<E>> {
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_TARGET, ppm_co2)
+            .await?;
+        Ok(())
+    }
+
+    async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        let mut buf = [0; 3];
+        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, &mut buf)
+            .await?;
+
+        Ok(u16::from_be_bytes([buf[0], buf[1]]))
+    }
+
+    async fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
+        self.write_command(PERFORM_FORCED_RECALIBRATION).await?;
+        Ok(())
     }
 
     async fn persists_settings(&mut self) -> Result<(), Error<E>> {

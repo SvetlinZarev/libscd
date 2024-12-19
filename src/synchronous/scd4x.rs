@@ -141,20 +141,20 @@ where
     /// This is the lower-bound background CO2 concentration the sensor is exposed
     /// to regularly. The default value is 400.
     pub fn set_automatic_self_calibration_target(&mut self, ppm_co2: u16) -> Result<(), Error<E>> {
-        self.inner.set_automatic_self_calibration_target(ppm_co2);
+        self.inner.set_automatic_self_calibration_target(ppm_co2)
     }
 
     /// The `get_automatic_self_calibration_target()` command can be sent when
     /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
     pub fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
-        self.inner.get_automatic_self_calibration_target();
+        self.inner.get_automatic_self_calibration_target()
     }
 
     /// The `perform_forced_recalibration()` command can be sent when the SCD4x
     /// is in idle mode after having been in operation for at least 3 minutes in
     /// an environment with a homogenous and constant CO2 concentration.
     pub fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
-        self.inner.perform_forced_recalibration();
+        self.inner.perform_forced_recalibration()
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude
@@ -318,20 +318,20 @@ where
     /// This is the lower-bound background CO2 concentration the sensor is exposed
     /// to regularly. The default value is 400.
     pub fn set_automatic_self_calibration_target(&mut self, ppm_co2: u16) -> Result<(), Error<E>> {
-        self.inner.set_automatic_self_calibration_target(ppm_co2);
+        self.inner.set_automatic_self_calibration_target(ppm_co2)
     }
 
     /// The `get_automatic_self_calibration_target()` command can be sent when
     /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
     pub fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
-        self.inner.get_automatic_self_calibration_target();
+        self.inner.get_automatic_self_calibration_target()
     }
 
     /// The `perform_forced_recalibration()` command can be sent when the SCD4x
     /// is in idle mode after having been in operation for at least 3 minutes in
     /// an environment with a homogenous and constant CO2 concentration.
     pub fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
-        self.inner.perform_forced_recalibration();
+        self.inner.perform_forced_recalibration()
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude

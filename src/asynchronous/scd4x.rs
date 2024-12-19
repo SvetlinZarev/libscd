@@ -145,20 +145,20 @@ where
     ) -> Result<(), Error<E>> {
         self.inner
             .set_automatic_self_calibration_target(ppm_co2)
-            .await;
+            .await
     }
 
     /// The `get_automatic_self_calibration_target()` command can be sent when
     /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
     pub async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
-        self.inner.get_automatic_self_calibration_target().await;
+        self.inner.get_automatic_self_calibration_target().await
     }
 
     /// The `perform_forced_recalibration()` command can be sent when the SCD4x
     /// is in idle mode after having been in operation for at least 3 minutes in
     /// an environment with a homogenous and constant CO2 concentration.
     pub async fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
-        self.inner.perform_forced_recalibration().await;
+        self.inner.perform_forced_recalibration().await
     }
 
     /// Check if the automatic self calibration algorithm is enabled
@@ -335,20 +335,20 @@ where
     ) -> Result<(), Error<E>> {
         self.inner
             .set_automatic_self_calibration_target(ppm_co2)
-            .await;
+            .await
     }
 
     /// The `get_automatic_self_calibration_target()` command can be sent when
     /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
     pub async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
-        self.inner.get_automatic_self_calibration_target().await;
+        self.inner.get_automatic_self_calibration_target().await
     }
 
     /// The `perform_forced_recalibration()` command can be sent when the SCD4x
     /// is in idle mode after having been in operation for at least 3 minutes in
     /// an environment with a homogenous and constant CO2 concentration.
     pub async fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
-        self.inner.perform_forced_recalibration().await;
+        self.inner.perform_forced_recalibration().await
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude

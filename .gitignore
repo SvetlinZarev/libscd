@@ -9,3 +9,4 @@
 !.gitignore
 !.cargo
 !.github
+!.vscode

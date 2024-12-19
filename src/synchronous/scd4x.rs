@@ -152,9 +152,14 @@ where
 
     /// The `perform_forced_recalibration()` command can be sent when the SCD4x
     /// is in idle mode after having been in operation for at least 3 minutes in
-    /// an environment with a homogenous and constant CO2 concentration.
-    pub fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
-        self.inner.perform_forced_recalibration()
+    /// an environment with a homogenous and constant CO2 concentration that is
+    /// already known.
+    ///
+    /// ppm_co2 refers to the current CO2 level.
+    ///
+    /// Returns either a failure or the FRC correction applied
+    pub fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+        self.inner.perform_forced_recalibration(ppm_co2)
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude
@@ -329,9 +334,14 @@ where
 
     /// The `perform_forced_recalibration()` command can be sent when the SCD4x
     /// is in idle mode after having been in operation for at least 3 minutes in
-    /// an environment with a homogenous and constant CO2 concentration.
-    pub fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
-        self.inner.perform_forced_recalibration()
+    /// an environment with a homogenous and constant CO2 concentration that is
+    /// already known.
+    ///
+    /// ppm_co2 refers to the current CO2 level.
+    ///
+    /// Returns either a failure or the FRC correction applied
+    pub fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+        self.inner.perform_forced_recalibration(ppm_co2)
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude
@@ -486,6 +496,46 @@ where
         Ok(())
     }
 
+    fn write_read_command_with_data(
+        &mut self,
+        cmd: Command,
+        data: u16,
+        read_buf: &mut [u8],
+    ) -> Result<(), Error<E>> {
+        if self.measurement_started & !cmd.allowed_while_running {
+            return Err(Error::NotAllowed);
+        }
+
+        assert_eq!(
+            read_buf.len() % 3,
+            0,
+            "The read buffer length must be a multiple of 3"
+        );
+
+        let c = cmd.op_code.to_be_bytes();
+        let d = data.to_be_bytes();
+
+        let mut buf = [0; 5];
+        buf[0..2].copy_from_slice(&c);
+        buf[2..4].copy_from_slice(&d);
+        buf[4] = crc8(&d);
+
+        self.i2c
+            .write(I2C_ADDRESS, &buf)
+            .map_err(|e| Error::I2C(e))?;
+        self.delay.delay_ms(cmd.exec_time as u32);
+
+        self.i2c
+            .read(I2C_ADDRESS, read_buf)
+            .map_err(|e| Error::I2C(e))?;
+
+        if !crc8_verify_chunked_3(read_buf) {
+            return Err(Error::CRC);
+        }
+
+        Ok(())
+    }
+
     fn read_command(&mut self, cmd: Command, buf: &mut [u8]) -> Result<(), Error<E>> {
         assert_eq!(buf.len() % 3, 0, "The buffer length must a multiple of 3");
 
@@ -602,14 +652,20 @@ where
 
     fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, &mut buf)?;
+        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_TARGET, &mut buf)?;
 
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
-    fn perform_forced_recalibration(&mut self) -> Result<(), Error<E>> {
-        self.write_command(PERFORM_FORCED_RECALIBRATION);
-        Ok(())
+    fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+        let mut buf = [0; 3];
+        self.write_read_command_with_data(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)?;
+
+        if buf[0] == 0xff && buf[1] == 0xff {
+            return Err(Error::FrcFailed);
+        }
+
+        Ok(i16::from_be_bytes([buf[0], buf[1]]))
     }
 
     fn persists_settings(&mut self) -> Result<(), Error<E>> {

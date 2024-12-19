@@ -661,11 +661,14 @@ where
         let mut buf = [0; 3];
         self.write_read_command_with_data(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)?;
 
-        if buf[0] == 0xff && buf[1] == 0xff {
+        let result = u16::from_be_bytes([buf[0], buf[1]]);
+
+        if result == 0xFFFF {
             return Err(Error::FrcFailed);
         }
 
-        Ok(i16::from_be_bytes([buf[0], buf[1]]))
+        let frc_correction = result as i32 - 0x8000;
+        Ok(frc_correction as i16)
     }
 
     fn persists_settings(&mut self) -> Result<(), Error<E>> {

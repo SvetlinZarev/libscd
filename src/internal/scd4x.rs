@@ -19,6 +19,10 @@ pub const SET_AMBIENT_PRESSURE: Command = Command::new(0xe000, 1, true);
 pub const SET_AUTOMATIC_SELF_CALIBRATION_ENABLED: Command = Command::new(0x2416, 1, false);
 pub const GET_AUTOMATIC_SELF_CALIBRATION_ENABLED: Command = Command::new(0x2313, 1, false);
 
+pub const SET_AUTOMATIC_SELF_CALIBRATION_TARGET: Command = Command::new(0x243a, 1, false);
+pub const GET_AUTOMATIC_SELF_CALIBRATION_TARGET: Command = Command::new(0x233f, 1, false);
+pub const PERFORM_FORCED_RECALIBRATION: Command = Command::new(0x362f, 400, false);
+
 pub const PERSIST_SETTINGS: Command = Command::new(0x3615, 800, false);
 pub const GET_SERIAL_NUMBER: Command = Command::new(0x3682, 1, false);
 

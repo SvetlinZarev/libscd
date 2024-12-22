@@ -7,11 +7,13 @@ pub use crate::internal::scd4x::I2C_ADDRESS;
 use crate::error::Error;
 use crate::internal::crc::{crc8, crc8_verify_chunked_3};
 use crate::internal::scd4x::{
-    decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_DATA_READY_STATUS,
-    GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET,
+    decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
+    GET_AUTOMATIC_SELF_CALIBRATION_TARGET, GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE,
+    GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION,
     PERFORM_SELF_TEST, PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
-    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET,
-    START_LOW_POWER_PERIODIC_MEASUREMENT, START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
+    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_AUTOMATIC_SELF_CALIBRATION_TARGET,
+    SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
+    START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
 
 #[cfg(feature = "scd41")]
@@ -126,8 +128,42 @@ where
     /// Set the current state (enabled / disabled) of the ASC. By default,
     /// ASC is enabled. To save the setting to the EEPROM, the
     /// `persist_settings()` (see Section 3.9.1) command must be issued.
-    pub async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+    pub async fn enable_automatic_self_calibration(
+        &mut self,
+        enabled: bool,
+    ) -> Result<(), Error<E>> {
         self.inner.enable_automatic_self_calibration(enabled).await
+    }
+
+    /// The `set_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It sets the value of the ASC baseline target.
+    /// This is the lower-bound background CO2 concentration the sensor is exposed
+    /// to regularly. The default value is 400.
+    pub async fn set_automatic_self_calibration_target(
+        &mut self,
+        ppm_co2: u16,
+    ) -> Result<(), Error<E>> {
+        self.inner
+            .set_automatic_self_calibration_target(ppm_co2)
+            .await
+    }
+
+    /// The `get_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
+    pub async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        self.inner.get_automatic_self_calibration_target().await
+    }
+
+    /// The `perform_forced_recalibration()` command can be sent when the SCD4x
+    /// is in idle mode after having been in operation for at least 3 minutes in
+    /// an environment with a homogenous and constant CO2 concentration that is
+    /// already known.
+    ///
+    /// ppm_co2 refers to the current CO2 level.
+    ///
+    /// Returns either a failure or the FRC correction applied
+    pub async fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+        self.inner.perform_forced_recalibration(ppm_co2).await
     }
 
     /// Check if the automatic self calibration algorithm is enabled
@@ -282,13 +318,47 @@ where
     /// Set the current state (enabled / disabled) of the ASC. By default,
     /// ASC is enabled. To save the setting to the EEPROM, the
     /// `persist_settings()` (see Section 3.9.1) command must be issued.
-    pub async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
+    pub async fn enable_automatic_self_calibration(
+        &mut self,
+        enabled: bool,
+    ) -> Result<(), Error<E>> {
         self.inner.enable_automatic_self_calibration(enabled).await
     }
 
     /// Check if the automatic self calibration algorithm is enabled
     pub async fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         self.inner.get_automatic_self_calibration().await
+    }
+
+    /// The `set_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It sets the value of the ASC baseline target.
+    /// This is the lower-bound background CO2 concentration the sensor is exposed
+    /// to regularly. The default value is 400.
+    pub async fn set_automatic_self_calibration_target(
+        &mut self,
+        ppm_co2: u16,
+    ) -> Result<(), Error<E>> {
+        self.inner
+            .set_automatic_self_calibration_target(ppm_co2)
+            .await
+    }
+
+    /// The `get_automatic_self_calibration_target()` command can be sent when
+    /// the SCD4x is in idle mode. It gets the value of the ASC baseline target.
+    pub async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        self.inner.get_automatic_self_calibration_target().await
+    }
+
+    /// The `perform_forced_recalibration()` command can be sent when the SCD4x
+    /// is in idle mode after having been in operation for at least 3 minutes in
+    /// an environment with a homogenous and constant CO2 concentration that is
+    /// already known.
+    ///
+    /// ppm_co2 refers to the current CO2 level.
+    ///
+    /// Returns either a failure or the FRC correction applied
+    pub async fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+        self.inner.perform_forced_recalibration(ppm_co2).await
     }
 
     /// Configuration settings such as the temperature offset, sensor altitude
@@ -453,8 +523,54 @@ where
         Ok(())
     }
 
+    async fn write_read_command_with_data(
+        &mut self,
+        cmd: Command,
+        data: u16,
+        read_buf: &mut [u8],
+    ) -> Result<(), Error<E>> {
+        if self.measurement_started & !cmd.allowed_while_running {
+            return Err(Error::NotAllowed);
+        }
+
+        assert_eq!(
+            read_buf.len() % 3,
+            0,
+            "The read buffer length must be a multiple of 3"
+        );
+
+        let c = cmd.op_code.to_be_bytes();
+        let d = data.to_be_bytes();
+
+        let mut buf = [0; 5];
+        buf[0..2].copy_from_slice(&c);
+        buf[2..4].copy_from_slice(&d);
+        buf[4] = crc8(&d);
+
+        self.i2c
+            .write(I2C_ADDRESS, &buf)
+            .await
+            .map_err(|e| Error::I2C(e))?;
+        self.delay.delay_ms(cmd.exec_time as u32).await;
+
+        self.i2c
+            .read(I2C_ADDRESS, read_buf)
+            .await
+            .map_err(|e| Error::I2C(e))?;
+
+        if !crc8_verify_chunked_3(read_buf) {
+            return Err(Error::CRC);
+        }
+
+        Ok(())
+    }
+
     async fn read_command(&mut self, cmd: Command, buf: &mut [u8]) -> Result<(), Error<E>> {
-        assert_eq!(buf.len() % 3, 0, "The buffer length must a multiple of 3");
+        assert_eq!(
+            buf.len() % 3,
+            0,
+            "The buffer length must be a multiple of 3"
+        );
 
         self.write_command(cmd).await?;
         self.i2c
@@ -569,6 +685,38 @@ where
 
         let raw_status = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(raw_status != 0)
+    }
+
+    async fn set_automatic_self_calibration_target(
+        &mut self,
+        ppm_co2: u16,
+    ) -> Result<(), Error<E>> {
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_TARGET, ppm_co2)
+            .await?;
+        Ok(())
+    }
+
+    async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
+        let mut buf = [0; 3];
+        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_TARGET, &mut buf)
+            .await?;
+
+        Ok(u16::from_be_bytes([buf[0], buf[1]]))
+    }
+
+    async fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+        let mut buf = [0; 3];
+        self.write_read_command_with_data(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)
+            .await?;
+
+        let result = u16::from_be_bytes([buf[0], buf[1]]);
+
+        if result == 0xFFFF {
+            return Err(Error::FrcFailed);
+        }
+
+        let frc_correction = result as i32 - 0x8000;
+        Ok(frc_correction as i16)
     }
 
     async fn persists_settings(&mut self) -> Result<(), Error<E>> {

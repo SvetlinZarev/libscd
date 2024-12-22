@@ -12,4 +12,7 @@ pub enum Error<E> {
 
     /// An invalid input was passed as a parameter
     InvalidInput,
+
+    /// Forced recalibration failed because the sensor was not operated before running the command
+    FrcFailed,
 }

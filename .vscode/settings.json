@@ -1,0 +1,7 @@
+// settings for the VSCode editor
+{
+    // quickly surface errors when working on code behind a non-default feature
+    "rust-analyzer.cargo.features": "all",
+    // cargo check should detect errors in code in non-default features
+    "rust-analyzer.check.features": "all",
+}

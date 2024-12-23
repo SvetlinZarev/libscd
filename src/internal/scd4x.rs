@@ -31,7 +31,6 @@ pub const GET_SERIAL_NUMBER: Command = Command::new(0x3682, 1, false);
 pub const PERFORM_SELF_TEST: Command = Command::new(0x3639, 10_000, false);
 pub const PERFORM_FACTORY_RESET: Command = Command::new(0x3632, 1_200, false);
 pub const REINIT: Command = Command::new(0x3646, 30, false);
-//pub const PERFORM_FORCED_RECALIBRATION: Command = Command::new(0x362f, 400, false);
 
 #[cfg(feature = "scd41")]
 pub const MEASURE_SINGLE_SHOT: Command = Command::new(0x219d, 5_000, false);

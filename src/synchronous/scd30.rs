@@ -2,12 +2,13 @@ use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
 use crate::error::Error;
-use crate::internal::crc::{crc8, crc8_verify_chunked_3};
+use crate::internal::crc::crc8_verify_chunked_3;
 use crate::internal::scd30::{
-    Command, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
-    MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS, READ_FIRMWARE_VERSION, READ_MEASUREMENT,
-    SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
-    START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT,
+    assert_valid_read_buf_len, command_with_data_to_payload, Command, GET_DATA_READY_STATUS,
+    GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET, MANAGE_AUTOMATIC_SELF_CALIBRATION,
+    READ_DELAY_MS, READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
+    SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
+    STOP_CONTINUOUS_MEASUREMENT,
 };
 
 pub use crate::internal::measurement::Measurement;
@@ -36,6 +37,20 @@ where
         self.i2c
     }
 
+    fn read_response(&mut self, read_buf: &mut [u8]) -> Result<(), Error<E>> {
+        assert_valid_read_buf_len(read_buf);
+
+        self.i2c
+            .read(crate::asynchronous::scd4x::I2C_ADDRESS, read_buf)
+            .map_err(|e| Error::I2C(e))?;
+
+        if !crc8_verify_chunked_3(read_buf) {
+            return Err(Error::CRC);
+        }
+
+        Ok(())
+    }
+
     fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
         self.i2c
             .write(I2C_ADDRESS, &cmd.to_be_bytes())
@@ -44,13 +59,7 @@ where
     }
 
     fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
-        let c = cmd.to_be_bytes();
-        let d = data.to_be_bytes();
-
-        let mut buf = [0; 5];
-        buf[0..2].copy_from_slice(&c);
-        buf[2..4].copy_from_slice(&d);
-        buf[4] = crc8(&d);
+        let buf = command_with_data_to_payload(cmd, data);
 
         self.i2c
             .write(I2C_ADDRESS, &buf)
@@ -59,16 +68,10 @@ where
         Ok(())
     }
 
-    fn read_command(&mut self, cmd: Command, buf: &mut [u8]) -> Result<(), Error<E>> {
-        assert_eq!(buf.len() % 3, 0, "The buffer length must a multiple of 3");
-
+    fn command_with_response(&mut self, cmd: Command, read_buf: &mut [u8]) -> Result<(), Error<E>> {
         self.write_command(cmd)?;
         self.delay.delay_ms(READ_DELAY_MS);
-        self.i2c.read(I2C_ADDRESS, buf).map_err(|e| Error::I2C(e))?;
-
-        if !crc8_verify_chunked_3(buf) {
-            return Err(Error::CRC);
-        }
+        self.read_response(read_buf)?;
 
         Ok(())
     }
@@ -125,7 +128,7 @@ where
     /// Retrieve the configured measurement interval
     pub fn get_measurement_interval(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_SET_MEASUREMENT_INTERVAL, &mut buf)?;
+        self.command_with_response(GET_SET_MEASUREMENT_INTERVAL, &mut buf)?;
 
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
@@ -142,7 +145,7 @@ where
     /// readout of the measurement values.
     pub fn data_ready(&mut self) -> Result<bool, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_DATA_READY_STATUS, &mut buf)?;
+        self.command_with_response(GET_DATA_READY_STATUS, &mut buf)?;
 
         let val = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(val == 1)
@@ -155,7 +158,7 @@ where
     /// before read out.
     pub fn read_measurement(&mut self) -> Result<Measurement, Error<E>> {
         let mut buf = [0; 18];
-        self.read_command(READ_MEASUREMENT, &mut buf)?;
+        self.command_with_response(READ_MEASUREMENT, &mut buf)?;
 
         let co2 = f32::from_be_bytes([buf[0], buf[1], buf[3], buf[4]]);
         let tmp = f32::from_be_bytes([buf[6], buf[7], buf[9], buf[10]]);
@@ -201,7 +204,7 @@ where
     /// Check if the automatic self calibration algorithm is enabled
     pub fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(MANAGE_AUTOMATIC_SELF_CALIBRATION, &mut buf)?;
+        self.command_with_response(MANAGE_AUTOMATIC_SELF_CALIBRATION, &mut buf)?;
 
         let raw_status = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(raw_status != 0)
@@ -249,7 +252,7 @@ where
     /// Retrieve the configured temperature offset
     pub fn get_temperature_offset(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_SET_TEMPERATURE_OFFSET, &mut buf)?;
+        self.command_with_response(GET_SET_TEMPERATURE_OFFSET, &mut buf)?;
 
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
@@ -271,7 +274,7 @@ where
     /// SCD30 module. The returned value is in the format `(Major, Minor)`
     pub fn read_firmware_version(&mut self) -> Result<(u8, u8), Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(READ_FIRMWARE_VERSION, &mut buf)?;
+        self.command_with_response(READ_FIRMWARE_VERSION, &mut buf)?;
 
         Ok((buf[0], buf[1]))
     }

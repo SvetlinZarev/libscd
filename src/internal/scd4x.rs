@@ -1,4 +1,4 @@
-use crate::internal::crc::crc8;
+use crate::internal::communication::opcode_with_data_into_payload;
 
 pub const I2C_ADDRESS: u8 = 0x62;
 
@@ -84,13 +84,5 @@ pub fn decode_serial_number(buf: [u8; 9]) -> u64 {
 }
 
 pub fn command_with_data_to_payload(cmd: Command, data: u16) -> [u8; 5] {
-    let c = cmd.op_code.to_be_bytes();
-    let d = data.to_be_bytes();
-
-    let mut buf = [0; 5];
-    buf[0..2].copy_from_slice(&c);
-    buf[2..4].copy_from_slice(&d);
-    buf[4] = crc8(&d);
-
-    buf
+    opcode_with_data_into_payload(cmd.op_code, data)
 }

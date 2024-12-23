@@ -2,17 +2,16 @@ use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
 use crate::error::Error;
-use crate::internal::crc::crc8_verify_chunked_3;
+use crate::internal::communication::sync::{i2c_read, i2c_write};
 use crate::internal::scd30::{
-    assert_valid_read_buf_len, command_with_data_to_payload, Command, GET_DATA_READY_STATUS,
-    GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET, MANAGE_AUTOMATIC_SELF_CALIBRATION,
-    READ_DELAY_MS, READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
+    command_with_data_to_payload, Command, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL,
+    GET_SET_TEMPERATURE_OFFSET, I2C_ADDRESS, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
+    READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
     SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
     STOP_CONTINUOUS_MEASUREMENT,
 };
 
 pub use crate::internal::measurement::Measurement;
-pub use crate::internal::scd30::I2C_ADDRESS;
 
 /// Driver implementation for the SCD30 CO2 sensor.
 ///
@@ -38,34 +37,16 @@ where
     }
 
     fn read_response(&mut self, read_buf: &mut [u8]) -> Result<(), Error<E>> {
-        assert_valid_read_buf_len(read_buf);
-
-        self.i2c
-            .read(crate::asynchronous::scd4x::I2C_ADDRESS, read_buf)
-            .map_err(|e| Error::I2C(e))?;
-
-        if !crc8_verify_chunked_3(read_buf) {
-            return Err(Error::CRC);
-        }
-
-        Ok(())
+        i2c_read(&mut self.i2c, I2C_ADDRESS, read_buf)
     }
 
     fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
-        self.i2c
-            .write(I2C_ADDRESS, &cmd.to_be_bytes())
-            .map_err(|e| Error::I2C(e))?;
-        Ok(())
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &cmd.to_be_bytes())
     }
 
     fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
         let buf = command_with_data_to_payload(cmd, data);
-
-        self.i2c
-            .write(I2C_ADDRESS, &buf)
-            .map_err(|e| Error::I2C(e))?;
-
-        Ok(())
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &buf)
     }
 
     fn command_with_response(&mut self, cmd: Command, read_buf: &mut [u8]) -> Result<(), Error<E>> {

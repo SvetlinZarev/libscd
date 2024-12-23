@@ -2,18 +2,18 @@ use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
 pub use crate::internal::measurement::Measurement;
-pub use crate::internal::scd4x::I2C_ADDRESS;
 
 use crate::error::Error;
-use crate::internal::crc::crc8_verify_chunked_3;
+use crate::internal::communication::sync::{i2c_read, i2c_write};
 use crate::internal::scd4x::{
     command_with_data_to_payload, decode_serial_number, Command,
     GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
     GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
-    PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST, PERSIST_SETTINGS,
-    READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE, SET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
-    SET_AUTOMATIC_SELF_CALIBRATION_TARGET, SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET,
-    START_LOW_POWER_PERIODIC_MEASUREMENT, START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
+    I2C_ADDRESS, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST,
+    PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
+    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_AUTOMATIC_SELF_CALIBRATION_TARGET,
+    SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
+    START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
 #[cfg(feature = "scd41")]
 use crate::internal::scd4x::{
@@ -470,34 +470,13 @@ where
         Ok(())
     }
 
-    fn assert_valid_read_buf_len(&self, buf: &[u8]) {
-        assert_eq!(
-            buf.len() % 3,
-            0,
-            "The read buffer length must be a multiple of 3"
-        );
-    }
-
     fn read_response(&mut self, read_buf: &mut [u8]) -> Result<(), Error<E>> {
-        self.assert_valid_read_buf_len(read_buf);
-
-        self.i2c
-            .read(I2C_ADDRESS, read_buf)
-            .map_err(|e| Error::I2C(e))?;
-
-        if !crc8_verify_chunked_3(read_buf) {
-            return Err(Error::CRC);
-        }
-
-        Ok(())
+        i2c_read(&mut self.i2c, I2C_ADDRESS, read_buf)
     }
 
     fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
         self.check_is_command_allowed(cmd)?;
-
-        self.i2c
-            .write(I2C_ADDRESS, &cmd.op_code.to_be_bytes())
-            .map_err(|e| Error::I2C(e))?;
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &cmd.op_code.to_be_bytes())?;
         self.delay.delay_ms(cmd.exec_time as u32);
 
         Ok(())
@@ -507,10 +486,7 @@ where
         self.check_is_command_allowed(cmd)?;
 
         let buf = command_with_data_to_payload(cmd, data);
-
-        self.i2c
-            .write(I2C_ADDRESS, &buf)
-            .map_err(|e| Error::I2C(e))?;
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &buf)?;
         self.delay.delay_ms(cmd.exec_time as u32);
 
         Ok(())

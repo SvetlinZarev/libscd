@@ -1,4 +1,4 @@
-use crate::internal::crc::crc8;
+use crate::internal::communication::opcode_with_data_into_payload;
 
 pub const I2C_ADDRESS: u8 = 0x61;
 
@@ -26,21 +26,5 @@ impl Command {
 }
 
 pub fn command_with_data_to_payload(cmd: Command, data: u16) -> [u8; 5] {
-    let c = cmd.to_be_bytes();
-    let d = data.to_be_bytes();
-
-    let mut buf = [0; 5];
-    buf[0..2].copy_from_slice(&c);
-    buf[2..4].copy_from_slice(&d);
-    buf[4] = crc8(&d);
-
-    buf
-}
-
-pub fn assert_valid_read_buf_len(read_buf: &[u8]) {
-    assert_eq!(
-        read_buf.len() % 3,
-        0,
-        "The read buffer length must be a multiple of 3"
-    );
+    opcode_with_data_into_payload(cmd.0, data)
 }

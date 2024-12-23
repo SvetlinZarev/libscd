@@ -462,68 +462,24 @@ where
         self.i2c
     }
 
-    fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
+    fn check_is_command_allowed(&self, cmd: Command) -> Result<(), Error<E>> {
         if self.measurement_started & !cmd.allowed_while_running {
             return Err(Error::NotAllowed);
         }
-
-        self.i2c
-            .write(I2C_ADDRESS, &cmd.op_code.to_be_bytes())
-            .map_err(|e| Error::I2C(e))?;
-        self.delay.delay_ms(cmd.exec_time as u32);
 
         Ok(())
     }
 
-    fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
-        if self.measurement_started & !cmd.allowed_while_running {
-            return Err(Error::NotAllowed);
-        }
-
-        let c = cmd.op_code.to_be_bytes();
-        let d = data.to_be_bytes();
-
-        let mut buf = [0; 5];
-        buf[0..2].copy_from_slice(&c);
-        buf[2..4].copy_from_slice(&d);
-        buf[4] = crc8(&d);
-
-        self.i2c
-            .write(I2C_ADDRESS, &buf)
-            .map_err(|e| Error::I2C(e))?;
-        self.delay.delay_ms(cmd.exec_time as u32);
-
-        Ok(())
-    }
-
-    fn write_read_command_with_data(
-        &mut self,
-        cmd: Command,
-        data: u16,
-        read_buf: &mut [u8],
-    ) -> Result<(), Error<E>> {
-        if self.measurement_started & !cmd.allowed_while_running {
-            return Err(Error::NotAllowed);
-        }
-
+    fn assert_valid_read_buf_len(&self, buf: &[u8]) {
         assert_eq!(
-            read_buf.len() % 3,
+            buf.len() % 3,
             0,
             "The read buffer length must be a multiple of 3"
         );
+    }
 
-        let c = cmd.op_code.to_be_bytes();
-        let d = data.to_be_bytes();
-
-        let mut buf = [0; 5];
-        buf[0..2].copy_from_slice(&c);
-        buf[2..4].copy_from_slice(&d);
-        buf[4] = crc8(&d);
-
-        self.i2c
-            .write(I2C_ADDRESS, &buf)
-            .map_err(|e| Error::I2C(e))?;
-        self.delay.delay_ms(cmd.exec_time as u32);
+    fn read_response(&mut self, read_buf: &mut [u8]) -> Result<(), Error<E>> {
+        self.assert_valid_read_buf_len(read_buf);
 
         self.i2c
             .read(I2C_ADDRESS, read_buf)
@@ -536,15 +492,51 @@ where
         Ok(())
     }
 
-    fn read_command(&mut self, cmd: Command, buf: &mut [u8]) -> Result<(), Error<E>> {
-        assert_eq!(buf.len() % 3, 0, "The buffer length must a multiple of 3");
+    fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
+        self.check_is_command_allowed(cmd)?;
 
+        self.i2c
+            .write(I2C_ADDRESS, &cmd.op_code.to_be_bytes())
+            .map_err(|e| Error::I2C(e))?;
+        self.delay.delay_ms(cmd.exec_time as u32);
+
+        Ok(())
+    }
+
+    fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
+        self.check_is_command_allowed(cmd)?;
+
+        let c = cmd.op_code.to_be_bytes();
+        let d = data.to_be_bytes();
+
+        let mut buf = [0; 5];
+        buf[0..2].copy_from_slice(&c);
+        buf[2..4].copy_from_slice(&d);
+        buf[4] = crc8(&d);
+
+        self.i2c
+            .write(I2C_ADDRESS, &buf)
+            .map_err(|e| Error::I2C(e))?;
+        self.delay.delay_ms(cmd.exec_time as u32);
+
+        Ok(())
+    }
+
+    fn command_with_response(&mut self, cmd: Command, read_buf: &mut [u8]) -> Result<(), Error<E>> {
         self.write_command(cmd)?;
-        self.i2c.read(I2C_ADDRESS, buf).map_err(|e| Error::I2C(e))?;
+        self.read_response(read_buf)?;
 
-        if !crc8_verify_chunked_3(buf) {
-            return Err(Error::CRC);
-        }
+        Ok(())
+    }
+
+    fn command_with_data_and_response(
+        &mut self,
+        cmd: Command,
+        data: u16,
+        read_buf: &mut [u8],
+    ) -> Result<(), Error<E>> {
+        self.write_command_with_data(cmd, data)?;
+        self.read_response(read_buf)?;
 
         Ok(())
     }
@@ -568,7 +560,7 @@ where
 
     fn data_ready(&mut self) -> Result<bool, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_DATA_READY_STATUS, &mut buf)?;
+        self.command_with_response(GET_DATA_READY_STATUS, &mut buf)?;
 
         let status = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(status & 0x07FF != 0)
@@ -576,7 +568,7 @@ where
 
     fn read_measurement(&mut self) -> Result<Measurement, Error<E>> {
         let mut buf = [0; 9];
-        self.read_command(READ_MEASUREMENT, &mut buf)?;
+        self.command_with_response(READ_MEASUREMENT, &mut buf)?;
 
         let co2 = u16::from_be_bytes([buf[0], buf[1]]);
         let temperature = u16::from_be_bytes([buf[3], buf[4]]);
@@ -598,7 +590,7 @@ where
 
     fn get_temperature_offset(&mut self) -> Result<f32, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_TEMPERATURE_OFFSET, &mut buf)?;
+        self.command_with_response(GET_TEMPERATURE_OFFSET, &mut buf)?;
 
         let offset = u16::from_be_bytes([buf[0], buf[1]]);
         let offset = offset as f32 * 175.0 / 65536.0;
@@ -617,7 +609,7 @@ where
 
     fn get_sensor_altitude(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_SENSOR_ALTITUDE, &mut buf)?;
+        self.command_with_response(GET_SENSOR_ALTITUDE, &mut buf)?;
 
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
@@ -639,7 +631,7 @@ where
 
     fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, &mut buf)?;
+        self.command_with_response(GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, &mut buf)?;
 
         let raw_status = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(raw_status != 0)
@@ -652,14 +644,14 @@ where
 
     fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_TARGET, &mut buf)?;
+        self.command_with_response(GET_AUTOMATIC_SELF_CALIBRATION_TARGET, &mut buf)?;
 
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
     fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
         let mut buf = [0; 3];
-        self.write_read_command_with_data(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)?;
+        self.command_with_data_and_response(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)?;
 
         let result = u16::from_be_bytes([buf[0], buf[1]]);
 
@@ -678,14 +670,14 @@ where
 
     fn serial_number(&mut self) -> Result<u64, Error<E>> {
         let mut buf = [0; 9];
-        self.read_command(GET_SERIAL_NUMBER, &mut buf)?;
+        self.command_with_response(GET_SERIAL_NUMBER, &mut buf)?;
 
         Ok(decode_serial_number(buf))
     }
 
     fn perform_self_test(&mut self) -> Result<bool, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(PERFORM_SELF_TEST, &mut buf)?;
+        self.command_with_response(PERFORM_SELF_TEST, &mut buf)?;
 
         let status = u16::from_be_bytes([buf[0], buf[1]]);
         Ok(status == 0)
@@ -737,7 +729,7 @@ where
     #[cfg(feature = "scd41")]
     fn get_automatic_self_calibration_initial_period(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, &mut buf)?;
+        self.command_with_response(GET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, &mut buf)?;
 
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
@@ -754,7 +746,7 @@ where
     #[cfg(feature = "scd41")]
     fn get_automatic_self_calibration_standard_period(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
-        self.read_command(GET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, &mut buf)?;
+        self.command_with_response(GET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, &mut buf)?;
 
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }

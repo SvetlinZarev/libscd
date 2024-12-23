@@ -1,6 +1,6 @@
+pub mod communication;
 pub mod crc;
 pub mod measurement;
-pub mod communication;
 
 #[cfg(feature = "scd30")]
 pub mod scd30;

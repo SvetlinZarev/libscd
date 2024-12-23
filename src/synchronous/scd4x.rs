@@ -162,10 +162,14 @@ where
     /// an environment with a homogenous and constant CO2 concentration that is
     /// already known.
     ///
-    /// ppm_co2 refers to the current CO2 level.
+    /// `ppm_co2` refers to the current CO2 level.
     ///
-    /// Returns either a failure or the FRC correction applied
-    pub fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+    /// An `Ok(None)` value indicates that the FRC has failed, because
+    /// the sensor was not operated before sending the command.
+    ///
+    /// An `Ok(Some(_))` value indicates that the FRC was applied. It contains
+    /// the magnitude of the correction
+    pub fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<Option<i16>, Error<E>> {
         self.inner.perform_forced_recalibration(ppm_co2)
     }
 
@@ -351,10 +355,14 @@ where
     /// an environment with a homogenous and constant CO2 concentration that is
     /// already known.
     ///
-    /// ppm_co2 refers to the current CO2 level.
+    /// `ppm_co2` refers to the current CO2 level.
     ///
-    /// Returns either a failure or the FRC correction applied
-    pub fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+    /// An `Ok(None)` value indicates that the FRC has failed, because
+    /// the sensor was not operated before sending the command.
+    ///
+    /// An `Ok(Some(_))` value indicates that the FRC was applied. It contains
+    /// the magnitude of the correction
+    pub fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<Option<i16>, Error<E>> {
         self.inner.perform_forced_recalibration(ppm_co2)
     }
 
@@ -640,18 +648,22 @@ where
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
-    fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<i16, Error<E>> {
+    fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<Option<i16>, Error<E>> {
+        // Section 3.8.1 fom the datasheet
+        // A return value of 0xFFFF indicates that the FRC has failed
+        // because the sensor was not operated before sending the command.
+        const FRC_FAILED: u16 = 0xFFFF;
+
         let mut buf = [0; 3];
         self.command_with_data_and_response(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)?;
 
         let result = u16::from_be_bytes([buf[0], buf[1]]);
-
-        if result == 0xFFFF {
-            return Err(Error::FrcFailed);
+        if result == FRC_FAILED {
+            return Ok(None);
         }
 
         let frc_correction = result as i32 - 0x8000;
-        Ok(frc_correction as i16)
+        Ok(Some(frc_correction as i16))
     }
 
     fn persists_settings(&mut self) -> Result<(), Error<E>> {

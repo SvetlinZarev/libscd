@@ -5,15 +5,15 @@ pub use crate::internal::measurement::Measurement;
 pub use crate::internal::scd4x::I2C_ADDRESS;
 
 use crate::error::Error;
-use crate::internal::crc::{crc8, crc8_verify_chunked_3};
+use crate::internal::crc::crc8_verify_chunked_3;
 use crate::internal::scd4x::{
-    decode_serial_number, Command, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
-    GET_AUTOMATIC_SELF_CALIBRATION_TARGET, GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE,
-    GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION,
-    PERFORM_SELF_TEST, PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
-    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_AUTOMATIC_SELF_CALIBRATION_TARGET,
-    SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
-    START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
+    command_with_data_to_payload, decode_serial_number, Command,
+    GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
+    GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
+    PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST, PERSIST_SETTINGS,
+    READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE, SET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
+    SET_AUTOMATIC_SELF_CALIBRATION_TARGET, SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET,
+    START_LOW_POWER_PERIODIC_MEASUREMENT, START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
 #[cfg(feature = "scd41")]
 use crate::internal::scd4x::{
@@ -506,13 +506,7 @@ where
     fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
         self.check_is_command_allowed(cmd)?;
 
-        let c = cmd.op_code.to_be_bytes();
-        let d = data.to_be_bytes();
-
-        let mut buf = [0; 5];
-        buf[0..2].copy_from_slice(&c);
-        buf[2..4].copy_from_slice(&d);
-        buf[4] = crc8(&d);
+        let buf = command_with_data_to_payload(cmd, data);
 
         self.i2c
             .write(I2C_ADDRESS, &buf)

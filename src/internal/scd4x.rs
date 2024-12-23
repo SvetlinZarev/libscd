@@ -1,3 +1,5 @@
+use crate::internal::crc::crc8;
+
 pub const I2C_ADDRESS: u8 = 0x62;
 
 pub const START_PERIODIC_MEASUREMENT: Command = Command::new(0x21b1, 0, false);
@@ -79,4 +81,16 @@ pub fn decode_serial_number(buf: [u8; 9]) -> u64 {
         | u64::from(buf[4]) << 16
         | u64::from(buf[6]) << 8
         | u64::from(buf[7])
+}
+
+pub fn command_with_data_to_payload(cmd: Command, data: u16) -> [u8; 5] {
+    let c = cmd.op_code.to_be_bytes();
+    let d = data.to_be_bytes();
+
+    let mut buf = [0; 5];
+    buf[0..2].copy_from_slice(&c);
+    buf[2..4].copy_from_slice(&d);
+    buf[4] = crc8(&d);
+
+    buf
 }

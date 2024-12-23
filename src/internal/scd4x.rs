@@ -16,7 +16,7 @@ pub const SET_SENSOR_ALTITUDE: Command = Command::new(0x2427, 1, false);
 pub const GET_SENSOR_ALTITUDE: Command = Command::new(0x2322, 1, false);
 
 pub const SET_AMBIENT_PRESSURE: Command = Command::new(0xe000, 1, true);
-//pub const GET_AMBIENT_PRESSURE: Command = Command::new(0xe000, 1, true);
+pub const GET_AMBIENT_PRESSURE: Command = Command::new(0xe000, 1, true);
 
 pub const SET_AUTOMATIC_SELF_CALIBRATION_ENABLED: Command = Command::new(0x2416, 1, false);
 pub const GET_AUTOMATIC_SELF_CALIBRATION_ENABLED: Command = Command::new(0x2313, 1, false);

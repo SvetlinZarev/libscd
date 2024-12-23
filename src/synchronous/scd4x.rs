@@ -6,7 +6,7 @@ pub use crate::internal::measurement::Measurement;
 use crate::error::Error;
 use crate::internal::communication::sync::{i2c_read, i2c_write};
 use crate::internal::scd4x::{
-    command_with_data_to_payload, decode_serial_number, Command,
+    command_with_data_to_payload, decode_serial_number, Command, GET_AMBIENT_PRESSURE,
     GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
     GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
     I2C_ADDRESS, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST,
@@ -122,6 +122,13 @@ where
     /// between 70_000 – 120_000 Pa. The default value is 101_300 Pa.
     pub fn set_ambient_pressure(&mut self, pressure: u32) -> Result<(), Error<E>> {
         self.inner.set_ambient_pressure(pressure)
+    }
+
+    /// The `get_ambient_pressure` command can be sent during periodic
+    /// measurements to read out the previously  saved ambient pressure value
+    /// set by the `set_ambient_pressure` command.
+    pub fn get_ambient_pressure(&mut self) -> Result<u32, Error<E>> {
+        self.inner.get_ambient_pressure()
     }
 
     /// Set the current state (enabled / disabled) of the ASC. By default,
@@ -304,6 +311,13 @@ where
     /// between 70_000 – 120_000 Pa. The default value is 101_300 Pa.
     pub fn set_ambient_pressure(&mut self, pressure: u32) -> Result<(), Error<E>> {
         self.inner.set_ambient_pressure(pressure)
+    }
+
+    /// The `get_ambient_pressure` command can be sent during periodic
+    /// measurements to read out the previously  saved ambient pressure value
+    /// set by the `set_ambient_pressure` command.
+    pub fn get_ambient_pressure(&mut self) -> Result<u32, Error<E>> {
+        self.inner.get_ambient_pressure()
     }
 
     /// Set the current state (enabled / disabled) of the ASC. By default,
@@ -592,6 +606,13 @@ where
         let pressure = (pressure / 100) as u16;
         self.write_command_with_data(SET_AMBIENT_PRESSURE, pressure)?;
         Ok(())
+    }
+
+    fn get_ambient_pressure(&mut self) -> Result<u32, Error<E>> {
+        let mut buf = [0; 3];
+        self.command_with_response(GET_AMBIENT_PRESSURE, &mut buf)?;
+
+        Ok(u16::from_be_bytes([buf[0], buf[1]]) as u32 * 100)
     }
 
     fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {

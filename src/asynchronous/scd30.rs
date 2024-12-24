@@ -5,13 +5,14 @@ use crate::error::Error;
 use crate::internal::communication::asynch::{i2c_read, i2c_write};
 use crate::internal::scd30::{
     command_with_data_to_payload, Command, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL,
-    GET_SET_TEMPERATURE_OFFSET, I2C_ADDRESS, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
+    GET_SET_TEMPERATURE_OFFSET, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
     READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
     SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
     STOP_CONTINUOUS_MEASUREMENT,
 };
 
 pub use crate::internal::measurement::Measurement;
+pub use crate::internal::scd30::I2C_ADDRESS;
 
 /// Driver implementation for the SCD30 CO2 sensor.
 ///

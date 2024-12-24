@@ -1,9 +1,9 @@
-name: test suite
+name: Test Suite
 on: [ push, pull_request ]
 
 jobs:
   test:
-    name: cargo test
+    name: Test Suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,27 +18,49 @@ jobs:
       - name: Test all features
         run: cargo test --all-features
 
-      - name: Run Clippy
+      - name: Clippy (all-features)
         run: cargo clippy --all-features
 
       - name: Test sync SCD30
         run: cargo test --features "sync, scd30"
 
+      - name: Clippy (sync, scd30)
+        run: cargo clippy --features "sync, scd30"
+
       - name: Test async SCD30
         run: cargo test --features "async, scd30"
+
+      - name: Clippy (async, scd30)
+        run: cargo clippy --features "async, scd30"
 
       - name: Test sync SCD40
         run: cargo test --features "sync, scd40"
 
+      - name: Clippy (sync, scd40)
+        run: cargo clippy --features "sync, scd40"
+
       - name: Test async SCD40
         run: cargo test --features "async, scd40"
+
+      - name: Clippy (async, scd40)
+        run: cargo clippy --features "async, scd40"
 
       - name: Test sync SCD41
         run: cargo test --features "sync, scd41"
 
+      - name: Clippy (sync, scd41)
+        run: cargo clippy --features "sync, scd41"
+
       - name: Test async SCD41
         run: cargo test --features "async, scd41"
 
+      - name: Clippy (async, scd41)
+        run: cargo clippy --features "async, scd41"
+
       - name: Build example - Synchronous SCD40
         working-directory: ./examples/embassy-scd40
-        run: cargo build
+        run: cargo check
+
+      - name: Lint example - Synchronous SCD40
+        working-directory: ./examples/embassy-scd40
+        run: cargo clippy

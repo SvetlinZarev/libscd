@@ -12,7 +12,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: "clippy"
+          components: "clippy, rustfmt"
           targets: "thumbv7em-none-eabihf"
 
       - name: Test all features
@@ -64,3 +64,6 @@ jobs:
       - name: Lint example - Synchronous SCD40
         working-directory: ./examples/embassy-scd40
         run: cargo clippy
+
+      - name: Verify code is properly formatted
+        run: cargo fmt --check

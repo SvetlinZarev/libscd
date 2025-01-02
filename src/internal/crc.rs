@@ -26,15 +26,9 @@ pub const fn crc8(data: &[u8]) -> u8 {
     crc
 }
 
-pub fn crc8_verify_chunked_3(data: &[u8]) -> bool {
-    data.chunks_exact(3)
-        .map(|w| (crc8(&w[..2]), w[2]))
-        .all(|(x, y)| x == y)
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::internal::crc::crc8;
+    use super::crc8;
 
     #[test]
     fn test_crc8() {

@@ -1,4 +1,4 @@
-pub mod communication;
+pub mod common;
 pub mod crc;
 pub mod measurement;
 

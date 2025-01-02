@@ -1,4 +1,4 @@
-use crate::internal::communication::opcode_with_data_into_payload;
+use crate::internal::common::opcode_with_data_into_payload;
 
 pub const I2C_ADDRESS: u8 = 0x62;
 
@@ -71,6 +71,14 @@ impl Command {
             allowed_while_running,
         }
     }
+
+    pub const fn prepare(self) -> [u8; 2] {
+        self.op_code.to_be_bytes()
+    }
+
+    pub const fn prepare_with_data(self, data: u16) -> [u8; 5] {
+        opcode_with_data_into_payload(self.op_code, data)
+    }
 }
 
 pub fn decode_serial_number(buf: [u8; 9]) -> u64 {
@@ -82,6 +90,27 @@ pub fn decode_serial_number(buf: [u8; 9]) -> u64 {
         | u64::from(buf[7])
 }
 
-pub fn command_with_data_to_payload(cmd: Command, data: u16) -> [u8; 5] {
-    opcode_with_data_into_payload(cmd.op_code, data)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_decode_serial_number() {
+        let response = [0xF8, 0x96, 0x31, 0x9F, 0x07, 0xC2, 0x3B, 0xBE, 0x89];
+        let serial_number = decode_serial_number(response);
+        assert_eq!(273_325_796_834_238, serial_number);
+    }
+
+    #[test]
+    fn test_prepare_command() {
+        assert_eq!([0x36, 0x82], GET_SERIAL_NUMBER.prepare());
+    }
+
+    #[test]
+    fn test_prepare_command_with_data() {
+        assert_eq!(
+            [0x24, 0x1D, 0x07, 0xE6, 0x48],
+            SET_TEMPERATURE_OFFSET.prepare_with_data(0x07E6)
+        );
+    }
 }

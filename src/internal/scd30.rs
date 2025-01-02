@@ -1,4 +1,4 @@
-use crate::internal::communication::opcode_with_data_into_payload;
+use crate::internal::common::opcode_with_data_into_payload;
 
 pub const I2C_ADDRESS: u8 = 0x61;
 
@@ -20,11 +20,29 @@ pub const SOFT_RESET: Command = Command(0xD304);
 pub struct Command(u16);
 
 impl Command {
-    pub fn to_be_bytes(self) -> [u8; 2] {
+    pub const fn prepare(self) -> [u8; 2] {
         self.0.to_be_bytes()
+    }
+
+    pub const fn prepare_with_data(self, data: u16) -> [u8; 5] {
+        opcode_with_data_into_payload(self.0, data)
     }
 }
 
-pub fn command_with_data_to_payload(cmd: Command, data: u16) -> [u8; 5] {
-    opcode_with_data_into_payload(cmd.0, data)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_prepare_command() {
+        assert_eq!([0x00, 0x10], START_CONTINUOUS_MEASUREMENT.prepare());
+    }
+
+    #[test]
+    fn test_prepare_command_with_data() {
+        assert_eq!(
+            [0x54, 0x03, 0x01, 0xF4, 0x33],
+            GET_SET_TEMPERATURE_OFFSET.prepare_with_data(0x01F4)
+        );
+    }
 }

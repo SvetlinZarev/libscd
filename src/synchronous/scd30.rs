@@ -2,17 +2,16 @@ use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
 use crate::error::Error;
-use crate::internal::communication::sync::{i2c_read, i2c_write};
 use crate::internal::scd30::{
-    command_with_data_to_payload, Command, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL,
-    GET_SET_TEMPERATURE_OFFSET, MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS,
-    READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
-    SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
-    STOP_CONTINUOUS_MEASUREMENT,
+    Command, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
+    MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS, READ_FIRMWARE_VERSION, READ_MEASUREMENT,
+    SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
+    START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT,
 };
 
 pub use crate::internal::measurement::Measurement;
 pub use crate::internal::scd30::I2C_ADDRESS;
+use crate::synchronous::i2c::{i2c_read, i2c_write};
 
 /// Driver implementation for the SCD30 CO2 sensor.
 ///
@@ -42,11 +41,11 @@ where
     }
 
     fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
-        i2c_write(&mut self.i2c, I2C_ADDRESS, &cmd.to_be_bytes())
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &cmd.prepare())
     }
 
     fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
-        let buf = command_with_data_to_payload(cmd, data);
+        let buf = cmd.prepare_with_data(data);
         i2c_write(&mut self.i2c, I2C_ADDRESS, &buf)
     }
 

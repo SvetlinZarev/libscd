@@ -1,19 +1,18 @@
+use crate::asynchronous::i2c::{i2c_read, i2c_write};
+pub use crate::internal::measurement::Measurement;
+pub use crate::internal::scd4x::I2C_ADDRESS;
 use embedded_hal_async::delay::DelayNs;
 use embedded_hal_async::i2c::I2c;
 
-pub use crate::internal::measurement::Measurement;
-pub use crate::internal::scd4x::I2C_ADDRESS;
-
 use crate::error::Error;
-use crate::internal::communication::asynch::{i2c_read, i2c_write};
 use crate::internal::scd4x::{
-    command_with_data_to_payload, decode_serial_number, Command, GET_AMBIENT_PRESSURE,
-    GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
-    GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
-    PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST, PERSIST_SETTINGS,
-    READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE, SET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
-    SET_AUTOMATIC_SELF_CALIBRATION_TARGET, SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET,
-    START_LOW_POWER_PERIODIC_MEASUREMENT, START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
+    decode_serial_number, Command, GET_AMBIENT_PRESSURE, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
+    GET_AUTOMATIC_SELF_CALIBRATION_TARGET, GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE,
+    GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION,
+    PERFORM_SELF_TEST, PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
+    SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_AUTOMATIC_SELF_CALIBRATION_TARGET,
+    SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
+    START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
 
 #[cfg(feature = "scd41")]
@@ -530,7 +529,8 @@ where
     async fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
         self.check_is_command_allowed(cmd)?;
 
-        i2c_write(&mut self.i2c, I2C_ADDRESS, &cmd.op_code.to_be_bytes()).await?;
+        let buf = cmd.prepare();
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &buf).await?;
         self.delay.delay_ms(cmd.exec_time as u32).await;
 
         Ok(())
@@ -539,7 +539,7 @@ where
     async fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
         self.check_is_command_allowed(cmd)?;
 
-        let buf = command_with_data_to_payload(cmd, data);
+        let buf = cmd.prepare_with_data(data);
         i2c_write(&mut self.i2c, I2C_ADDRESS, &buf).await?;
         self.delay.delay_ms(cmd.exec_time as u32).await;
 

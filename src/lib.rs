@@ -32,3 +32,9 @@ pub mod asynchronous;
 #[doc(hidden)]
 /// Shared code across the sync/async implementations
 pub(crate) mod internal;
+
+#[cfg(not(all(
+    any(feature = "sync", feature = "async"),
+    any(feature = "scd30", feature = "scd40", feature = "scd41")
+)))]
+const _: () = assert!(false, "You must select at least one sensor (scd30/scd40/scd41) and at least one mode of operation (sync/async)");

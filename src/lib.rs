@@ -31,8 +31,8 @@ pub mod synchronous;
 #[cfg(feature = "async")]
 pub mod asynchronous;
 
-#[doc(hidden)]
 /// Shared code across the sync/async implementations
+#[doc(hidden)]
 pub(crate) mod internal;
 
 #[cfg(not(all(

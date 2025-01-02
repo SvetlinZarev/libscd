@@ -1,5 +1,7 @@
 #![no_std]
 #![deny(unsafe_code)]
+#![deny(warnings)]
+#![deny(unused_must_use)]
 
 //! LibSCD is a crate providing both synchronous and asynchronous driver
 //! implementations for SCD30 and SCD4x CO2 sensors using the

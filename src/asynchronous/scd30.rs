@@ -86,15 +86,12 @@ where
         }
 
         self.write_command_with_data(START_CONTINUOUS_MEASUREMENT, ambient_pressure_hpa)
-            .await?;
-
-        Ok(())
+            .await
     }
 
     /// Stops the continuous measurement of the SCD30.
     pub async fn stop_continuous_measurement(&mut self) -> Result<(), Error<E>> {
-        self.write_command(STOP_CONTINUOUS_MEASUREMENT).await?;
-        Ok(())
+        self.write_command(STOP_CONTINUOUS_MEASUREMENT).await
     }
 
     /// Sets the interval used by the SCD30 sensor to measure in continuous
@@ -113,9 +110,7 @@ where
         }
 
         self.write_command_with_data(GET_SET_MEASUREMENT_INTERVAL, interval_seconds)
-            .await?;
-
-        Ok(())
+            .await
     }
 
     /// Retrieve the configured measurement interval
@@ -197,8 +192,7 @@ where
         enable: bool,
     ) -> Result<(), Error<E>> {
         self.write_command_with_data(MANAGE_AUTOMATIC_SELF_CALIBRATION, enable as u16)
-            .await?;
-        Ok(())
+            .await
     }
 
     /// Check if the automatic self calibration algorithm is enabled
@@ -230,8 +224,7 @@ where
     /// reference value of 400 ppm.
     pub async fn set_forced_recalibration_value(&mut self, ppm: u16) -> Result<(), Error<E>> {
         self.write_command_with_data(SET_FORCED_RECALIBRATION_VALUE, ppm)
-            .await?;
-        Ok(())
+            .await
     }
 
     /// The on-board RH/T sensor is influenced by thermal self-heating of
@@ -248,8 +241,7 @@ where
     /// Unit: C * 100 => one tick corresponds to 0.01 degrees Celsius
     pub async fn set_temperature_offset(&mut self, offset: u16) -> Result<(), Error<E>> {
         self.write_command_with_data(GET_SET_TEMPERATURE_OFFSET, offset)
-            .await?;
-        Ok(())
+            .await
     }
 
     /// Retrieve the configured temperature offset
@@ -271,8 +263,7 @@ where
     /// will be used for altitude compensation after repowering.
     pub async fn set_altitude_compensation(&mut self, altitude: u16) -> Result<(), Error<E>> {
         self.write_command_with_data(SET_ALTITUDE_COMPENSATION, altitude)
-            .await?;
-        Ok(())
+            .await
     }
 
     /// Following command can be used to read out the firmware version of
@@ -298,7 +289,6 @@ where
     /// The sensor is able to receive the command at any time, regardless of
     /// its internal state.
     pub async fn soft_reset(&mut self) -> Result<(), Error<E>> {
-        self.write_command(SOFT_RESET).await?;
-        Ok(())
+        self.write_command(SOFT_RESET).await
     }
 }

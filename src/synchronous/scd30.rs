@@ -82,15 +82,12 @@ where
             return Err(Error::InvalidInput);
         }
 
-        self.write_command_with_data(START_CONTINUOUS_MEASUREMENT, ambient_pressure_hpa)?;
-
-        Ok(())
+        self.write_command_with_data(START_CONTINUOUS_MEASUREMENT, ambient_pressure_hpa)
     }
 
     /// Stops the continuous measurement of the SCD30.
     pub fn stop_continuous_measurement(&mut self) -> Result<(), Error<E>> {
-        self.write_command(STOP_CONTINUOUS_MEASUREMENT)?;
-        Ok(())
+        self.write_command(STOP_CONTINUOUS_MEASUREMENT)
     }
 
     /// Sets the interval used by the SCD30 sensor to measure in continuous
@@ -105,9 +102,7 @@ where
             return Err(Error::InvalidInput);
         }
 
-        self.write_command_with_data(GET_SET_MEASUREMENT_INTERVAL, interval_seconds)?;
-
-        Ok(())
+        self.write_command_with_data(GET_SET_MEASUREMENT_INTERVAL, interval_seconds)
     }
 
     /// Retrieve the configured measurement interval
@@ -213,8 +208,7 @@ where
     ///  After repowering the sensor, the command will return the standard
     /// reference value of 400 ppm.
     pub fn set_forced_recalibration_value(&mut self, ppm: u16) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_FORCED_RECALIBRATION_VALUE, ppm)?;
-        Ok(())
+        self.write_command_with_data(SET_FORCED_RECALIBRATION_VALUE, ppm)
     }
 
     /// The on-board RH/T sensor is influenced by thermal self-heating of
@@ -230,8 +224,7 @@ where
     ///
     /// Unit: C * 100 => one tick corresponds to 0.01 degrees Celsius
     pub fn set_temperature_offset(&mut self, offset: u16) -> Result<(), Error<E>> {
-        self.write_command_with_data(GET_SET_TEMPERATURE_OFFSET, offset)?;
-        Ok(())
+        self.write_command_with_data(GET_SET_TEMPERATURE_OFFSET, offset)
     }
 
     /// Retrieve the configured temperature offset
@@ -251,8 +244,7 @@ where
     ///  Altitude value is saved in non-volatile memory. The last set value
     /// will be used for altitude compensation after repowering.
     pub fn set_altitude_compensation(&mut self, altitude: u16) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_ALTITUDE_COMPENSATION, altitude)?;
-        Ok(())
+        self.write_command_with_data(SET_ALTITUDE_COMPENSATION, altitude)
     }
 
     /// Following command can be used to read out the firmware version of
@@ -277,7 +269,6 @@ where
     /// The sensor is able to receive the command at any time, regardless of
     /// its internal state.
     pub fn soft_reset(&mut self) -> Result<(), Error<E>> {
-        self.write_command(SOFT_RESET)?;
-        Ok(())
+        self.write_command(SOFT_RESET)
     }
 }

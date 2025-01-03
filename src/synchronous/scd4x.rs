@@ -1,9 +1,10 @@
-use embedded_hal::delay::DelayNs;
-use embedded_hal::i2c::I2c;
+pub use crate::internal::scd4x::I2C_ADDRESS;
 
 use crate::error::Error;
-pub use crate::internal::measurement::Measurement;
-pub use crate::internal::scd4x::I2C_ADDRESS;
+use crate::measurement::Measurement;
+use crate::synchronous::i2c::{i2c_read, i2c_write};
+use embedded_hal::delay::DelayNs;
+use embedded_hal::i2c::I2c;
 
 use crate::internal::scd4x::{
     decode_serial_number, Command, AMBIENT_PRESSURE_RANGE_HPA, FRC_FAILED, GET_AMBIENT_PRESSURE,
@@ -15,7 +16,6 @@ use crate::internal::scd4x::{
     SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
     START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
-
 #[cfg(feature = "scd41")]
 use crate::internal::scd4x::{
     GET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, GET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD,
@@ -23,8 +23,6 @@ use crate::internal::scd4x::{
     SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD,
     WAKE_UP,
 };
-
-use crate::synchronous::i2c::{i2c_read, i2c_write};
 
 /// Driver implementation for the SCD40 CO2 sensor. This driver is compatible
 /// with SCD41 devices, though it does not expose the SCD41 additional APIs

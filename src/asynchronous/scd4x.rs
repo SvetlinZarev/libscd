@@ -1,10 +1,11 @@
-use crate::asynchronous::i2c::{i2c_read, i2c_write};
-pub use crate::internal::measurement::Measurement;
 pub use crate::internal::scd4x::I2C_ADDRESS;
+
+use crate::asynchronous::i2c::{i2c_read, i2c_write};
+use crate::error::Error;
+use crate::measurement::Measurement;
 use embedded_hal_async::delay::DelayNs;
 use embedded_hal_async::i2c::I2c;
 
-use crate::error::Error;
 use crate::internal::scd4x::{
     decode_serial_number, Command, AMBIENT_PRESSURE_RANGE_HPA, FRC_FAILED, GET_AMBIENT_PRESSURE,
     GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,

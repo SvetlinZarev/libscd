@@ -1,6 +1,5 @@
 pub mod common;
 pub mod crc;
-pub mod measurement;
 
 #[cfg(feature = "scd30")]
 pub mod scd30;

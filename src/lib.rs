@@ -21,6 +21,9 @@
 /// Error type used by the library
 pub mod error;
 
+/// Shared measurement type used by the various sensors
+pub mod measurement;
+
 /// Synchronous (blocking) driver implementations using embedded-hal. This
 /// module needs to be enabled via the `sync` feature flag
 #[cfg(feature = "sync")]

@@ -1,7 +1,11 @@
+pub use crate::internal::scd30::I2C_ADDRESS;
+
+use crate::error::Error;
+use crate::measurement::Measurement;
+use crate::synchronous::i2c::{i2c_read, i2c_write};
 use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
-use crate::error::Error;
 use crate::internal::scd30::{
     Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA,
     GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
@@ -10,10 +14,6 @@ use crate::internal::scd30::{
     SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
     STOP_CONTINUOUS_MEASUREMENT,
 };
-
-pub use crate::internal::measurement::Measurement;
-pub use crate::internal::scd30::I2C_ADDRESS;
-use crate::synchronous::i2c::{i2c_read, i2c_write};
 
 /// Driver implementation for the SCD30 CO2 sensor.
 ///

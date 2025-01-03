@@ -11,11 +11,6 @@ pub const MAX_ALTITUDE: u16 = 3_000;
 // Section 3.7.5 of the datasheet
 pub const AMBIENT_PRESSURE_RANGE_HPA: Range<u16> = 700..1201;
 
-// Section 3.8.1 from the datasheet
-// A return value of 0xFFFF indicates that the FRC has failed
-// because the sensor was not operated before sending the command.
-pub const FRC_FAILED: u16 = 0xFFFF;
-
 // Constant used in several data conversions such as in the temperature offset
 const TWO_P16_M1: f32 = u16::MAX as f32; // `2.pow(16) - 1`
 
@@ -143,6 +138,21 @@ pub fn encode_temperature_offset<E>(offset: f32) -> Result<u16, Error<E>> {
 pub fn decode_temperature_offset(buf: [u8; 3]) -> f32 {
     let offset = u16::from_be_bytes([buf[0], buf[1]]);
     offset as f32 * TEMP_K1 / TWO_P16_M1
+}
+
+pub fn decode_frc_status(buf: [u8; 3]) -> Option<i16> {
+    // Section 3.8.1 from the datasheet
+    // A return value of 0xFFFF indicates that the FRC has failed
+    // because the sensor was not operated before sending the command.
+    const FRC_FAILED: u16 = 0xFFFF;
+
+    let result = u16::from_be_bytes([buf[0], buf[1]]);
+    if FRC_FAILED == result {
+        return None;
+    }
+
+    let frc_correction = result as i32 - 0x8000;
+    Some(frc_correction as i16)
 }
 
 #[cfg(test)]
@@ -278,5 +288,17 @@ mod tests {
         assert_eq!(500, m.co2);
         assert!((25.0 - m.temperature).abs() < F32_TOLERANCE);
         assert!((37.0 - m.humidity).abs() < F32_TOLERANCE);
+    }
+
+    #[test]
+    fn test_decode_frc_status() {
+        let status = decode_frc_status([0x7F, 0xCE, 0x7B]);
+        assert_eq!(Some(-50), status);
+    }
+
+    #[test]
+    fn test_decode_frc_status_failed() {
+        let status = decode_frc_status([0xFF, 0xFF, crc8(&[0xFF, 0xFF])]);
+        assert_eq!(None, status);
     }
 }

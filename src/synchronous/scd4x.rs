@@ -7,8 +7,8 @@ use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
 use crate::internal::scd4x::{
-    decode_measurement, decode_serial_number, decode_temperature_offset, encode_temperature_offset,
-    Command, AMBIENT_PRESSURE_RANGE_HPA, FRC_FAILED, GET_AMBIENT_PRESSURE,
+    decode_frc_status, decode_measurement, decode_serial_number, decode_temperature_offset,
+    encode_temperature_offset, Command, AMBIENT_PRESSURE_RANGE_HPA, GET_AMBIENT_PRESSURE,
     GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
     GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
     MAX_ALTITUDE, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST,
@@ -630,14 +630,7 @@ where
     fn perform_forced_recalibration(&mut self, ppm_co2: u16) -> Result<Option<i16>, Error<E>> {
         let mut buf = [0; 3];
         self.command_with_data_and_response(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)?;
-
-        let result = u16::from_be_bytes([buf[0], buf[1]]);
-        if result == FRC_FAILED {
-            return Ok(None);
-        }
-
-        let frc_correction = result as i32 - 0x8000;
-        Ok(Some(frc_correction as i16))
+        Ok(decode_frc_status(buf))
     }
 
     fn persists_settings(&mut self) -> Result<(), Error<E>> {

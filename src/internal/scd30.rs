@@ -1,4 +1,5 @@
 use crate::internal::common::opcode_with_data_into_payload;
+use crate::measurement::Measurement;
 use core::ops::Range;
 
 // Section 1.1.1
@@ -52,9 +53,23 @@ impl Command {
     }
 }
 
+pub fn decode_measurement_data(buf: [u8; 18]) -> Measurement {
+    let co2 = f32::from_be_bytes([buf[0], buf[1], buf[3], buf[4]]);
+    let tmp = f32::from_be_bytes([buf[6], buf[7], buf[9], buf[10]]);
+    let hum = f32::from_be_bytes([buf[12], buf[13], buf[15], buf[16]]);
+
+    Measurement {
+        temperature: tmp,
+        humidity: hum,
+        co2: co2 as u16,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const F32_TOLERANCE: f32 = 0.05;
 
     #[test]
     fn test_prepare_command() {
@@ -66,6 +81,36 @@ mod tests {
         assert_eq!(
             [0x54, 0x03, 0x01, 0xF4, 0x33],
             GET_SET_TEMPERATURE_OFFSET.prepare_with_data(0x01F4)
+        );
+    }
+
+    #[test]
+    fn test_decode_measurement_data() {
+        const EXPECTED_HUMIDITY: f32 = 48.8;
+        const EXPECTED_TEMPERATURE: f32 = 27.2;
+
+        let buf = [
+            0x43, 0xDB, 0xCB, // CO2: MMSB, MLSB, CRC
+            0x8C, 0x2E, 0x8F, // CO2: LMSB, LLSB, CRC
+            0x41, 0xD9, 0x70, // TMP: MMSB, MLSB, CRC
+            0xE7, 0xFF, 0xF5, // TMP: LMSB, LLSB, CRC
+            0x42, 0x43, 0xBF, // RH%: MMSB, MLSB, CRC
+            0x3A, 0x1B, 0x74, // RH%: LMSB, LLSB, CRC
+        ];
+
+        let m = decode_measurement_data(buf);
+        assert_eq!(439, m.co2);
+        assert!(
+            (EXPECTED_HUMIDITY - m.humidity).abs() < F32_TOLERANCE,
+            "Expected: {}; Actual: {}",
+            EXPECTED_HUMIDITY,
+            m.humidity
+        );
+        assert!(
+            (EXPECTED_TEMPERATURE - m.temperature).abs() < F32_TOLERANCE,
+            "Expected: {}; Actual: {}",
+            EXPECTED_TEMPERATURE,
+            m.temperature
         );
     }
 }

@@ -7,11 +7,11 @@ use embedded_hal_async::delay::DelayNs;
 use embedded_hal_async::i2c::I2c;
 
 use crate::internal::scd30::{
-    Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA, BOOT_DELAY_MILLIS,
-    FRC_PPM_RANGE, GET_DATA_READY_STATUS, GET_SET_ALTITUDE_COMPENSATION,
-    GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET, MANAGE_AUTOMATIC_SELF_CALIBRATION,
-    MEASUREMENT_INTERVAL_RANGE, READ_FIRMWARE_VERSION, READ_MEASUREMENT,
-    SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
+    decode_measurement_data, Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION,
+    AMBIENT_PRESSURE_RANGE_HPA, BOOT_DELAY_MILLIS, FRC_PPM_RANGE, GET_DATA_READY_STATUS,
+    GET_SET_ALTITUDE_COMPENSATION, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
+    MANAGE_AUTOMATIC_SELF_CALIBRATION, MEASUREMENT_INTERVAL_RANGE, READ_FIRMWARE_VERSION,
+    READ_MEASUREMENT, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
     STOP_CONTINUOUS_MEASUREMENT, WRITE_DELAY_MILLIS,
 };
 
@@ -152,15 +152,7 @@ where
         self.command_with_response(READ_MEASUREMENT, &mut buf)
             .await?;
 
-        let co2 = f32::from_be_bytes([buf[0], buf[1], buf[3], buf[4]]);
-        let tmp = f32::from_be_bytes([buf[6], buf[7], buf[9], buf[10]]);
-        let hum = f32::from_be_bytes([buf[12], buf[13], buf[15], buf[16]]);
-
-        Ok(Measurement {
-            temperature: tmp,
-            humidity: hum,
-            co2: co2 as u16,
-        })
+        Ok(decode_measurement_data(buf))
     }
 
     /// Continuous automatic self-calibration can be (de-)activated with the

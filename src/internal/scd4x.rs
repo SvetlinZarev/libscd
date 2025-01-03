@@ -1,4 +1,6 @@
+use crate::error::Error;
 use crate::internal::common::opcode_with_data_into_payload;
+use crate::measurement::Measurement;
 use core::ops::Range;
 
 pub const I2C_ADDRESS: u8 = 0x62;
@@ -13,6 +15,12 @@ pub const AMBIENT_PRESSURE_RANGE_HPA: Range<u16> = 700..1201;
 // A return value of 0xFFFF indicates that the FRC has failed
 // because the sensor was not operated before sending the command.
 pub const FRC_FAILED: u16 = 0xFFFF;
+
+// Constant used in several data conversions such as in the temperature offset
+const TWO_P16_M1: f32 = u16::MAX as f32; // `2.pow(16) - 1`
+
+// Constant used in the temperature data conversion
+const TEMP_K1: f32 = 175.0f32;
 
 pub const START_PERIODIC_MEASUREMENT: Command = Command::new(0x21b1, 0, false);
 pub const START_LOW_POWER_PERIODIC_MEASUREMENT: Command = Command::new(0x21ac, 0, false);
@@ -102,9 +110,47 @@ pub fn decode_serial_number(buf: [u8; 9]) -> u64 {
         | u64::from(buf[7])
 }
 
+pub fn decode_measurement(buf: [u8; 9]) -> Measurement {
+    Measurement {
+        temperature: decode_temp_measurement(buf[3], buf[4]),
+        humidity: decode_humidity_measurement(buf[6], buf[7]),
+        co2: decode_co2_measurement(buf[0], buf[1]),
+    }
+}
+
+fn decode_temp_measurement(msb: u8, lsb: u8) -> f32 {
+    let raw = u16::from_be_bytes([msb, lsb]);
+    raw as f32 * TEMP_K1 / TWO_P16_M1 - 45.0
+}
+
+fn decode_humidity_measurement(msb: u8, lsb: u8) -> f32 {
+    let raw = u16::from_be_bytes([msb, lsb]);
+    raw as f32 * 100.0 / TWO_P16_M1
+}
+
+fn decode_co2_measurement(msb: u8, lsb: u8) -> u16 {
+    u16::from_be_bytes([msb, lsb])
+}
+
+pub fn encode_temperature_offset<E>(offset: f32) -> Result<u16, Error<E>> {
+    if !offset.is_finite() || offset.is_sign_negative() {
+        return Err(Error::InvalidInput);
+    }
+
+    Ok((offset * TWO_P16_M1 / TEMP_K1) as u16)
+}
+
+pub fn decode_temperature_offset(buf: [u8; 3]) -> f32 {
+    let offset = u16::from_be_bytes([buf[0], buf[1]]);
+    offset as f32 * TEMP_K1 / TWO_P16_M1
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::internal::crc::crc8;
+
+    const F32_TOLERANCE: f32 = 0.005;
 
     #[test]
     fn test_decode_serial_number() {
@@ -124,5 +170,113 @@ mod tests {
             [0x24, 0x1D, 0x07, 0xE6, 0x48],
             SET_TEMPERATURE_OFFSET.prepare_with_data(0x07E6)
         );
+    }
+
+    #[test]
+    fn test_decode_temperature_offset_1() {
+        // Section 3.7.1 of the datasheet
+        let raw = [0x07, 0x0E6, 0x48];
+        let offset = decode_temperature_offset(raw);
+        assert!(offset.is_finite());
+        assert!((5.4 - offset).abs() < F32_TOLERANCE);
+    }
+
+    #[test]
+    fn test_decode_temperature_offset_2() {
+        // Section 3.7.2 of the datasheet
+        let raw = [0x09, 0x012, 0x63];
+        let offset = decode_temperature_offset(raw);
+        assert!(offset.is_finite());
+        assert!((6.2 - offset).abs() < F32_TOLERANCE);
+    }
+
+    #[test]
+    fn test_encode_temperature_offset() {
+        // Section 3.7.1 of the datasheet
+        let word = encode_temperature_offset::<()>(5.4).unwrap();
+        assert_eq!(0x07E6, word);
+    }
+
+    #[test]
+    fn test_encode_decode_temperature_offset() {
+        const MIN_OFFSET: f32 = 0.0;
+        const MAX_OFFSET: f32 = 20.0;
+        const INCREMENT: f32 = 0.01;
+
+        let mut offset = MIN_OFFSET;
+        while offset <= MAX_OFFSET {
+            let encoded = encode_temperature_offset::<()>(offset)
+                .unwrap()
+                .to_be_bytes();
+
+            let wire_format = [encoded[0], encoded[1], crc8(&encoded)];
+            let decoded = decode_temperature_offset(wire_format);
+
+            assert!(
+                (decoded - offset).abs() < F32_TOLERANCE,
+                "Offset={}; Decoded={}",
+                offset,
+                decoded
+            );
+            offset += INCREMENT;
+        }
+    }
+
+    #[test]
+    fn test_encode_temperature_offset_rejects_negative() {
+        assert_eq!(
+            Err(Error::InvalidInput),
+            encode_temperature_offset::<()>(-1.0)
+        );
+    }
+
+    #[test]
+    fn test_encode_temperature_offset_rejects_nan() {
+        assert_eq!(
+            Err(Error::InvalidInput),
+            encode_temperature_offset::<()>(f32::NAN)
+        );
+    }
+
+    #[test]
+    fn test_decode_temp_measurement() {
+        const EXPECTED: f32 = 25.0;
+
+        let decoded = decode_temp_measurement(0x66, 0x67);
+        assert!(decoded.is_finite());
+        assert!(
+            (EXPECTED - decoded).abs() < F32_TOLERANCE,
+            "Expected: {}; Decoded: {}",
+            EXPECTED,
+            decoded
+        );
+    }
+
+    #[test]
+    fn test_decode_co2_measurement() {
+        let decoded = decode_co2_measurement(0x01, 0xF4);
+        assert_eq!(500, decoded)
+    }
+
+    #[test]
+    fn test_decode_humidity_measurement() {
+        const EXPECTED: f32 = 37.0;
+
+        let decoded = decode_humidity_measurement(0x5E, 0xB9);
+        assert!(decoded.is_finite());
+        assert!(
+            (EXPECTED - decoded).abs() < F32_TOLERANCE,
+            "Expected: {}; Decoded: {}",
+            EXPECTED,
+            decoded
+        );
+    }
+
+    #[test]
+    fn test_decode_measurement() {
+        let m = decode_measurement([0x01, 0xF4, 0x33, 0x66, 0x67, 0xA2, 0x5E, 0xB9, 0x3C]);
+        assert_eq!(500, m.co2);
+        assert!((25.0 - m.temperature).abs() < F32_TOLERANCE);
+        assert!((37.0 - m.humidity).abs() < F32_TOLERANCE);
     }
 }

@@ -7,7 +7,8 @@ use embedded_hal_async::delay::DelayNs;
 use embedded_hal_async::i2c::I2c;
 
 use crate::internal::scd4x::{
-    decode_serial_number, Command, AMBIENT_PRESSURE_RANGE_HPA, FRC_FAILED, GET_AMBIENT_PRESSURE,
+    decode_measurement, decode_serial_number, decode_temperature_offset, encode_temperature_offset,
+    Command, AMBIENT_PRESSURE_RANGE_HPA, FRC_FAILED, GET_AMBIENT_PRESSURE,
     GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
     GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
     MAX_ALTITUDE, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST,
@@ -600,35 +601,20 @@ where
         let mut buf = [0; 9];
         self.command_with_response(READ_MEASUREMENT, &mut buf)
             .await?;
-
-        let co2 = u16::from_be_bytes([buf[0], buf[1]]);
-        let temperature = u16::from_be_bytes([buf[3], buf[4]]);
-        let humidity = u16::from_be_bytes([buf[6], buf[7]]);
-
-        Ok(Measurement {
-            temperature: temperature as f32 * 175.0 / 65_536.0 - 45.0,
-            humidity: humidity as f32 * 100.0 / 65_536.0,
-            co2,
-        })
+        Ok(decode_measurement(buf))
     }
 
     async fn set_temperature_offset(&mut self, offset: f32) -> Result<(), Error<E>> {
-        let value = (offset * 65536.0 / 175.0) as i16 as u16;
-
+        let value = encode_temperature_offset(offset)?;
         self.write_command_with_data(SET_TEMPERATURE_OFFSET, value)
-            .await?;
-        Ok(())
+            .await
     }
 
     async fn get_temperature_offset(&mut self) -> Result<f32, Error<E>> {
         let mut buf = [0; 3];
         self.command_with_response(GET_TEMPERATURE_OFFSET, &mut buf)
             .await?;
-
-        let offset = u16::from_be_bytes([buf[0], buf[1]]);
-        let offset = offset as f32 * 175.0 / 65536.0;
-
-        Ok(offset)
+        Ok(decode_temperature_offset(buf))
     }
 
     async fn set_sensor_altitude(&mut self, altitude: u16) -> Result<(), Error<E>> {

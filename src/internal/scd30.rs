@@ -1,10 +1,27 @@
 use crate::internal::common::opcode_with_data_into_payload;
 use core::ops::Range;
 
+// Section 1.1.1
 pub const I2C_ADDRESS: u8 = 0x61;
+
+// Section 1.1.2.
+// The datasheet is ambiguous whether the driver should wait after each write
+// command. For some commands (1.4.4-GetDataReady, 1.4.5-DataMeasurement)
+// it's explicitly specified that the implementations must wait at least 3ms
+// before reading the response. For other commands, such as 1.4.6-FRC/ASC, it
+// is not explicitly specified, but then it would contradict the diagram
+// at 1.1.2. So take the safer route and always perform a delay after a write
+// command
 pub const WRITE_DELAY_MILLIS: u32 = 5;
+
+// Section 1.1. Boot delay is at most 2s.
+pub const BOOT_DELAY_MILLIS: u32 = 2_000;
+
+// Section 1.4.1
 pub const AMBIENT_PRESSURE_DISABLE_COMPENSATION: u16 = 0;
 pub const AMBIENT_PRESSURE_RANGE_HPA: Range<u16> = 700..1401;
+
+// Section 1.4.3
 pub const MEASUREMENT_INTERVAL_RANGE: Range<u16> = 2..1801;
 
 pub const START_CONTINUOUS_MEASUREMENT: Command = Command(0x0010);

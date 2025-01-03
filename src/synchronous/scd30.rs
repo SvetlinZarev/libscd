@@ -7,7 +7,7 @@ use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
 use crate::internal::scd30::{
-    Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA,
+    Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA, BOOT_DELAY_MILLIS,
     GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
     MANAGE_AUTOMATIC_SELF_CALIBRATION, MEASUREMENT_INTERVAL_RANGE, READ_FIRMWARE_VERSION,
     READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
@@ -269,6 +269,8 @@ where
     /// The sensor is able to receive the command at any time, regardless of
     /// its internal state.
     pub fn soft_reset(&mut self) -> Result<(), Error<E>> {
-        self.write_command(SOFT_RESET)
+        self.write_command(SOFT_RESET)?;
+        self.delay.delay_ms(BOOT_DELAY_MILLIS);
+        Ok(())
     }
 }

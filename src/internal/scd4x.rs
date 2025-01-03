@@ -1,6 +1,14 @@
 use crate::internal::common::opcode_with_data_into_payload;
+use core::ops::Range;
 
 pub const I2C_ADDRESS: u8 = 0x62;
+pub const MAX_ALTITUDE: u16 = 3_000;
+pub const AMBIENT_PRESSURE_RANGE_PA: Range<u32> = 70_000..120_001;
+
+// Section 3.8.1 from the datasheet
+// A return value of 0xFFFF indicates that the FRC has failed
+// because the sensor was not operated before sending the command.
+pub const FRC_FAILED: u16 = 0xFFFF;
 
 pub const START_PERIODIC_MEASUREMENT: Command = Command::new(0x21b1, 0, false);
 pub const START_LOW_POWER_PERIODIC_MEASUREMENT: Command = Command::new(0x21ac, 0, false);

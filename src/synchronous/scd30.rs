@@ -3,10 +3,12 @@ use embedded_hal::i2c::I2c;
 
 use crate::error::Error;
 use crate::internal::scd30::{
-    Command, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
-    MANAGE_AUTOMATIC_SELF_CALIBRATION, READ_DELAY_MS, READ_FIRMWARE_VERSION, READ_MEASUREMENT,
-    SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
-    START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT,
+    Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA,
+    GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
+    MANAGE_AUTOMATIC_SELF_CALIBRATION, MEASUREMENT_INTERVAL_RANGE, READ_DELAY_MS,
+    READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
+    SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
+    STOP_CONTINUOUS_MEASUREMENT,
 };
 
 pub use crate::internal::measurement::Measurement;
@@ -74,7 +76,9 @@ where
         &mut self,
         ambient_pressure_hpa: u16,
     ) -> Result<(), Error<E>> {
-        if !(700..=1400).contains(&ambient_pressure_hpa) && 0 != ambient_pressure_hpa {
+        if !AMBIENT_PRESSURE_RANGE_HPA.contains(&ambient_pressure_hpa)
+            && AMBIENT_PRESSURE_DISABLE_COMPENSATION != ambient_pressure_hpa
+        {
             return Err(Error::InvalidInput);
         }
 
@@ -97,7 +101,7 @@ where
     ///
     /// The valid range is `2..=1800` seconds
     pub fn set_measurement_interval(&mut self, interval_seconds: u16) -> Result<(), Error<E>> {
-        if !(2..=1800).contains(&interval_seconds) {
+        if !MEASUREMENT_INTERVAL_RANGE.contains(&interval_seconds) {
             return Err(Error::InvalidInput);
         }
 

@@ -6,10 +6,11 @@ use embedded_hal_async::i2c::I2c;
 
 use crate::error::Error;
 use crate::internal::scd4x::{
-    decode_serial_number, Command, GET_AMBIENT_PRESSURE, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
-    GET_AUTOMATIC_SELF_CALIBRATION_TARGET, GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE,
-    GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION,
-    PERFORM_SELF_TEST, PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
+    decode_serial_number, Command, AMBIENT_PRESSURE_RANGE_PA, FRC_FAILED, GET_AMBIENT_PRESSURE,
+    GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
+    GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
+    MAX_ALTITUDE, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST,
+    PERSIST_SETTINGS, READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE,
     SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, SET_AUTOMATIC_SELF_CALIBRATION_TARGET,
     SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET, START_LOW_POWER_PERIODIC_MEASUREMENT,
     START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
@@ -630,7 +631,7 @@ where
     }
 
     async fn set_sensor_altitude(&mut self, altitude: u16) -> Result<(), Error<E>> {
-        if altitude > 3_000 {
+        if altitude > MAX_ALTITUDE {
             return Err(Error::InvalidInput);
         }
 
@@ -648,7 +649,7 @@ where
     }
 
     async fn set_ambient_pressure(&mut self, pressure: u32) -> Result<(), Error<E>> {
-        if !(70_000..=120_000).contains(&pressure) {
+        if !AMBIENT_PRESSURE_RANGE_PA.contains(&pressure) {
             return Err(Error::InvalidInput);
         }
 
@@ -702,11 +703,6 @@ where
         &mut self,
         ppm_co2: u16,
     ) -> Result<Option<i16>, Error<E>> {
-        // Section 3.8.1 fom the datasheet
-        // A return value of 0xFFFF indicates that the FRC has failed
-        // because the sensor was not operated before sending the command.
-        const FRC_FAILED: u16 = 0xFFFF;
-
         let mut buf = [0; 3];
         self.command_with_data_and_response(PERFORM_FORCED_RECALIBRATION, ppm_co2, &mut buf)
             .await?;

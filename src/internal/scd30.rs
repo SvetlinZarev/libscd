@@ -1,8 +1,11 @@
 use crate::internal::common::opcode_with_data_into_payload;
+use core::ops::Range;
 
 pub const I2C_ADDRESS: u8 = 0x61;
-
 pub const READ_DELAY_MS: u32 = 3;
+pub const AMBIENT_PRESSURE_DISABLE_COMPENSATION: u16 = 0;
+pub const AMBIENT_PRESSURE_RANGE_HPA: Range<u16> = 700..1401;
+pub const MEASUREMENT_INTERVAL_RANGE: Range<u16> = 2..1801;
 
 pub const START_CONTINUOUS_MEASUREMENT: Command = Command(0x0010);
 pub const STOP_CONTINUOUS_MEASUREMENT: Command = Command(0x0104);

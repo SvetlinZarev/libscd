@@ -565,9 +565,7 @@ where
         read_buf: &mut [u8],
     ) -> Result<(), Error<E>> {
         self.write_command_with_data(cmd, data).await?;
-        self.read_response(read_buf).await?;
-
-        Ok(())
+        self.read_response(read_buf).await
     }
 
     async fn start_periodic_measurement(&mut self) -> Result<(), Error<E>> {
@@ -584,8 +582,7 @@ where
 
     async fn start_low_power_periodic_measurement(&mut self) -> Result<(), Error<E>> {
         self.write_command(START_LOW_POWER_PERIODIC_MEASUREMENT)
-            .await?;
-        Ok(())
+            .await
     }
 
     async fn data_ready(&mut self) -> Result<bool, Error<E>> {
@@ -623,8 +620,7 @@ where
         }
 
         self.write_command_with_data(SET_SENSOR_ALTITUDE, altitude)
-            .await?;
-        Ok(())
+            .await
     }
 
     async fn get_sensor_altitude(&mut self) -> Result<u16, Error<E>> {
@@ -641,8 +637,7 @@ where
         }
 
         self.write_command_with_data(SET_AMBIENT_PRESSURE, pressure)
-            .await?;
-        Ok(())
+            .await
     }
 
     async fn get_ambient_pressure(&mut self) -> Result<u16, Error<E>> {
@@ -655,8 +650,7 @@ where
 
     async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
         self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, enabled as u16)
-            .await?;
-        Ok(())
+            .await
     }
 
     async fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
@@ -673,8 +667,7 @@ where
         ppm_co2: u16,
     ) -> Result<(), Error<E>> {
         self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_TARGET, ppm_co2)
-            .await?;
-        Ok(())
+            .await
     }
 
     async fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
@@ -703,8 +696,7 @@ where
     }
 
     async fn persists_settings(&mut self) -> Result<(), Error<E>> {
-        self.write_command(PERSIST_SETTINGS).await?;
-        Ok(())
+        self.write_command(PERSIST_SETTINGS).await
     }
 
     async fn serial_number(&mut self) -> Result<u64, Error<E>> {
@@ -725,37 +717,31 @@ where
     }
 
     async fn perform_factory_reset(&mut self) -> Result<(), Error<E>> {
-        self.write_command(PERFORM_FACTORY_RESET).await?;
-        Ok(())
+        self.write_command(PERFORM_FACTORY_RESET).await
     }
 
     async fn reinit(&mut self) -> Result<(), Error<E>> {
-        self.write_command(REINIT).await?;
-        Ok(())
+        self.write_command(REINIT).await
     }
 
     #[cfg(feature = "scd41")]
     async fn measure_single_shot(&mut self) -> Result<(), Error<E>> {
-        self.write_command(MEASURE_SINGLE_SHOT).await?;
-        Ok(())
+        self.write_command(MEASURE_SINGLE_SHOT).await
     }
 
     #[cfg(feature = "scd41")]
     async fn measure_single_shot_rht_only(&mut self) -> Result<(), Error<E>> {
-        self.write_command(MEASURE_SINGLE_SHOT_RHT_ONLY).await?;
-        Ok(())
+        self.write_command(MEASURE_SINGLE_SHOT_RHT_ONLY).await
     }
 
     #[cfg(feature = "scd41")]
     async fn power_down(&mut self) -> Result<(), Error<E>> {
-        self.write_command(POWER_DOWN).await?;
-        Ok(())
+        self.write_command(POWER_DOWN).await
     }
 
     #[cfg(feature = "scd41")]
     async fn wake_up(&mut self) -> Result<(), Error<E>> {
-        self.write_command(WAKE_UP).await?;
-        Ok(())
+        self.write_command(WAKE_UP).await
     }
 
     #[cfg(feature = "scd41")]
@@ -764,8 +750,7 @@ where
         hours: u16,
     ) -> Result<(), Error<E>> {
         self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, hours)
-            .await?;
-        Ok(())
+            .await
     }
 
     #[cfg(feature = "scd41")]
@@ -783,8 +768,7 @@ where
         hours: u16,
     ) -> Result<(), Error<E>> {
         self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, hours)
-            .await?;
-        Ok(())
+            .await
     }
 
     #[cfg(feature = "scd41")]

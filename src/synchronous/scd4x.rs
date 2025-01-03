@@ -520,9 +520,7 @@ where
 
     fn command_with_response(&mut self, cmd: Command, read_buf: &mut [u8]) -> Result<(), Error<E>> {
         self.write_command(cmd)?;
-        self.read_response(read_buf)?;
-
-        Ok(())
+        self.read_response(read_buf)
     }
 
     fn command_with_data_and_response(
@@ -532,9 +530,7 @@ where
         read_buf: &mut [u8],
     ) -> Result<(), Error<E>> {
         self.write_command_with_data(cmd, data)?;
-        self.read_response(read_buf)?;
-
-        Ok(())
+        self.read_response(read_buf)
     }
 
     fn start_periodic_measurement(&mut self) -> Result<(), Error<E>> {
@@ -550,8 +546,7 @@ where
     }
 
     fn start_low_power_periodic_measurement(&mut self) -> Result<(), Error<E>> {
-        self.write_command(START_LOW_POWER_PERIODIC_MEASUREMENT)?;
-        Ok(())
+        self.write_command(START_LOW_POWER_PERIODIC_MEASUREMENT)
     }
 
     fn data_ready(&mut self) -> Result<bool, Error<E>> {
@@ -584,8 +579,7 @@ where
             return Err(Error::InvalidInput);
         }
 
-        self.write_command_with_data(SET_SENSOR_ALTITUDE, altitude)?;
-        Ok(())
+        self.write_command_with_data(SET_SENSOR_ALTITUDE, altitude)
     }
 
     fn get_sensor_altitude(&mut self) -> Result<u16, Error<E>> {
@@ -600,8 +594,7 @@ where
             return Err(Error::InvalidInput);
         }
 
-        self.write_command_with_data(SET_AMBIENT_PRESSURE, pressure)?;
-        Ok(())
+        self.write_command_with_data(SET_AMBIENT_PRESSURE, pressure)
     }
 
     fn get_ambient_pressure(&mut self) -> Result<u16, Error<E>> {
@@ -612,8 +605,7 @@ where
     }
 
     fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, enabled as u16)?;
-        Ok(())
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_ENABLED, enabled as u16)
     }
 
     fn get_automatic_self_calibration(&mut self) -> Result<bool, Error<E>> {
@@ -625,8 +617,7 @@ where
     }
 
     fn set_automatic_self_calibration_target(&mut self, ppm_co2: u16) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_TARGET, ppm_co2)?;
-        Ok(())
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_TARGET, ppm_co2)
     }
 
     fn get_automatic_self_calibration_target(&mut self) -> Result<u16, Error<E>> {
@@ -650,8 +641,7 @@ where
     }
 
     fn persists_settings(&mut self) -> Result<(), Error<E>> {
-        self.write_command(PERSIST_SETTINGS)?;
-        Ok(())
+        self.write_command(PERSIST_SETTINGS)
     }
 
     fn serial_number(&mut self) -> Result<u64, Error<E>> {
@@ -670,37 +660,31 @@ where
     }
 
     fn perform_factory_reset(&mut self) -> Result<(), Error<E>> {
-        self.write_command(PERFORM_FACTORY_RESET)?;
-        Ok(())
+        self.write_command(PERFORM_FACTORY_RESET)
     }
 
     fn reinit(&mut self) -> Result<(), Error<E>> {
-        self.write_command(REINIT)?;
-        Ok(())
+        self.write_command(REINIT)
     }
 
     #[cfg(feature = "scd41")]
     fn measure_single_shot(&mut self) -> Result<(), Error<E>> {
-        self.write_command(MEASURE_SINGLE_SHOT)?;
-        Ok(())
+        self.write_command(MEASURE_SINGLE_SHOT)
     }
 
     #[cfg(feature = "scd41")]
     fn measure_single_shot_rht_only(&mut self) -> Result<(), Error<E>> {
-        self.write_command(MEASURE_SINGLE_SHOT_RHT_ONLY)?;
-        Ok(())
+        self.write_command(MEASURE_SINGLE_SHOT_RHT_ONLY)
     }
 
     #[cfg(feature = "scd41")]
     fn power_down(&mut self) -> Result<(), Error<E>> {
-        self.write_command(POWER_DOWN)?;
-        Ok(())
+        self.write_command(POWER_DOWN)
     }
 
     #[cfg(feature = "scd41")]
     fn wake_up(&mut self) -> Result<(), Error<E>> {
-        self.write_command(WAKE_UP)?;
-        Ok(())
+        self.write_command(WAKE_UP)
     }
 
     #[cfg(feature = "scd41")]
@@ -708,8 +692,7 @@ where
         &mut self,
         hours: u16,
     ) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, hours)?;
-        Ok(())
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, hours)
     }
 
     #[cfg(feature = "scd41")]
@@ -725,8 +708,7 @@ where
         &mut self,
         hours: u16,
     ) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, hours)?;
-        Ok(())
+        self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, hours)
     }
 
     #[cfg(feature = "scd41")]

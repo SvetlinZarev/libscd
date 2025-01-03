@@ -8,7 +8,7 @@ use embedded_hal::i2c::I2c;
 
 use crate::internal::scd30::{
     Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA, BOOT_DELAY_MILLIS,
-    GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
+    FRC_PPM_RANGE, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
     MANAGE_AUTOMATIC_SELF_CALIBRATION, MEASUREMENT_INTERVAL_RANGE, READ_FIRMWARE_VERSION,
     READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
     START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT, WRITE_DELAY_MILLIS,
@@ -177,8 +177,7 @@ where
     /// down while ASC is activated SCD30 will continue with automatic
     /// self-calibration after repowering without sending the command.
     pub fn enable_automatic_self_calibration(&mut self, enable: bool) -> Result<(), Error<E>> {
-        self.write_command_with_data(MANAGE_AUTOMATIC_SELF_CALIBRATION, enable as u16)?;
-        Ok(())
+        self.write_command_with_data(MANAGE_AUTOMATIC_SELF_CALIBRATION, enable as u16)
     }
 
     /// Check if the automatic self calibration algorithm is enabled
@@ -208,6 +207,10 @@ where
     ///  After repowering the sensor, the command will return the standard
     /// reference value of 400 ppm.
     pub fn set_forced_recalibration_value(&mut self, ppm: u16) -> Result<(), Error<E>> {
+        if !FRC_PPM_RANGE.contains(&ppm) {
+            return Err(Error::InvalidInput);
+        }
+
         self.write_command_with_data(SET_FORCED_RECALIBRATION_VALUE, ppm)
     }
 

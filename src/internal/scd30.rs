@@ -24,6 +24,9 @@ pub const AMBIENT_PRESSURE_RANGE_HPA: Range<u16> = 700..1401;
 // Section 1.4.3
 pub const MEASUREMENT_INTERVAL_RANGE: Range<u16> = 2..1801;
 
+// Section 1.4.6
+pub const FRC_PPM_RANGE: Range<u16> = 400..2001;
+
 pub const START_CONTINUOUS_MEASUREMENT: Command = Command(0x0010);
 pub const STOP_CONTINUOUS_MEASUREMENT: Command = Command(0x0104);
 pub const GET_SET_MEASUREMENT_INTERVAL: Command = Command(0x4600);

@@ -8,10 +8,11 @@ use embedded_hal::i2c::I2c;
 
 use crate::internal::scd30::{
     Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA, BOOT_DELAY_MILLIS,
-    FRC_PPM_RANGE, GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
-    MANAGE_AUTOMATIC_SELF_CALIBRATION, MEASUREMENT_INTERVAL_RANGE, READ_FIRMWARE_VERSION,
-    READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
-    START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT, WRITE_DELAY_MILLIS,
+    FRC_PPM_RANGE, GET_DATA_READY_STATUS, GET_SET_ALTITUDE_COMPENSATION,
+    GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET, MANAGE_AUTOMATIC_SELF_CALIBRATION,
+    MEASUREMENT_INTERVAL_RANGE, READ_FIRMWARE_VERSION, READ_MEASUREMENT,
+    SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
+    STOP_CONTINUOUS_MEASUREMENT, WRITE_DELAY_MILLIS,
 };
 
 /// Driver implementation for the SCD30 CO2 sensor.
@@ -244,10 +245,17 @@ where
     /// disregarded when an ambient pressure is given to the sensor,
     /// please see section 1.4.1.
     ///
-    ///  Altitude value is saved in non-volatile memory. The last set value
+    /// Altitude value is saved in non-volatile memory. The last set value
     /// will be used for altitude compensation after repowering.
     pub fn set_altitude_compensation(&mut self, altitude: u16) -> Result<(), Error<E>> {
-        self.write_command_with_data(SET_ALTITUDE_COMPENSATION, altitude)
+        self.write_command_with_data(GET_SET_ALTITUDE_COMPENSATION, altitude)
+    }
+
+    // Read the configured altitude compensation value
+    pub fn get_altitude_compensation(&mut self) -> Result<u16, Error<E>> {
+        let mut buf = [0; 3];
+        self.command_with_response(GET_SET_ALTITUDE_COMPENSATION, &mut buf)?;
+        Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
     /// Following command can be used to read out the firmware version of

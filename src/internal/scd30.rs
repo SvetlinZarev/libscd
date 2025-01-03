@@ -35,7 +35,7 @@ pub const READ_MEASUREMENT: Command = Command(0x0300);
 pub const MANAGE_AUTOMATIC_SELF_CALIBRATION: Command = Command(0x5306);
 pub const SET_FORCED_RECALIBRATION_VALUE: Command = Command(0x5204);
 pub const GET_SET_TEMPERATURE_OFFSET: Command = Command(0x5403);
-pub const SET_ALTITUDE_COMPENSATION: Command = Command(0x5102);
+pub const GET_SET_ALTITUDE_COMPENSATION: Command = Command(0x5102);
 pub const READ_FIRMWARE_VERSION: Command = Command(0xD100);
 pub const SOFT_RESET: Command = Command(0xD304);
 

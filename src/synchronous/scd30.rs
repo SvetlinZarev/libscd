@@ -9,10 +9,9 @@ use embedded_hal::i2c::I2c;
 use crate::internal::scd30::{
     Command, AMBIENT_PRESSURE_DISABLE_COMPENSATION, AMBIENT_PRESSURE_RANGE_HPA,
     GET_DATA_READY_STATUS, GET_SET_MEASUREMENT_INTERVAL, GET_SET_TEMPERATURE_OFFSET,
-    MANAGE_AUTOMATIC_SELF_CALIBRATION, MEASUREMENT_INTERVAL_RANGE, READ_DELAY_MS,
-    READ_FIRMWARE_VERSION, READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION,
-    SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET, START_CONTINUOUS_MEASUREMENT,
-    STOP_CONTINUOUS_MEASUREMENT,
+    MANAGE_AUTOMATIC_SELF_CALIBRATION, MEASUREMENT_INTERVAL_RANGE, READ_FIRMWARE_VERSION,
+    READ_MEASUREMENT, SET_ALTITUDE_COMPENSATION, SET_FORCED_RECALIBRATION_VALUE, SOFT_RESET,
+    START_CONTINUOUS_MEASUREMENT, STOP_CONTINUOUS_MEASUREMENT, WRITE_DELAY_MILLIS,
 };
 
 /// Driver implementation for the SCD30 CO2 sensor.
@@ -43,20 +42,21 @@ where
     }
 
     fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
-        i2c_write(&mut self.i2c, I2C_ADDRESS, &cmd.prepare())
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &cmd.prepare())?;
+        self.delay.delay_ms(WRITE_DELAY_MILLIS);
+        Ok(())
     }
 
     fn write_command_with_data(&mut self, cmd: Command, data: u16) -> Result<(), Error<E>> {
         let buf = cmd.prepare_with_data(data);
-        i2c_write(&mut self.i2c, I2C_ADDRESS, &buf)
+        i2c_write(&mut self.i2c, I2C_ADDRESS, &buf)?;
+        self.delay.delay_ms(WRITE_DELAY_MILLIS);
+        Ok(())
     }
 
     fn command_with_response(&mut self, cmd: Command, read_buf: &mut [u8]) -> Result<(), Error<E>> {
         self.write_command(cmd)?;
-        self.delay.delay_ms(READ_DELAY_MS);
-        self.read_response(read_buf)?;
-
-        Ok(())
+        self.read_response(read_buf)
     }
 
     /// Starts continuous measurement of the SCD30 to measure CO2 concentration, humidity and temperature. Measurement data

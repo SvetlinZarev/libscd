@@ -19,6 +19,9 @@ jobs:
           components: "clippy, rustfmt"
           targets: "thumbv7em-none-eabihf"
 
+      - name: Setup Mold as the default linker
+        uses: rui314/setup-mold@v1
+
       - name: Test all features
         run: cargo test --all-features
 

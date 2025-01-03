@@ -6,7 +6,7 @@ use embedded_hal_async::i2c::I2c;
 
 use crate::error::Error;
 use crate::internal::scd4x::{
-    decode_serial_number, Command, AMBIENT_PRESSURE_RANGE_PA, FRC_FAILED, GET_AMBIENT_PRESSURE,
+    decode_serial_number, Command, AMBIENT_PRESSURE_RANGE_HPA, FRC_FAILED, GET_AMBIENT_PRESSURE,
     GET_AUTOMATIC_SELF_CALIBRATION_ENABLED, GET_AUTOMATIC_SELF_CALIBRATION_TARGET,
     GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET,
     MAX_ALTITUDE, PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST,
@@ -120,15 +120,15 @@ where
     /// based on a previously set sensor altitude. Use of this command is
     /// highly recommended for applications experiencing significant ambient
     /// pressure changes to ensure sensor accuracy. Valid input values are
-    /// between 70_000 – 120_000 Pa. The default value is 101_300 Pa.
-    pub async fn set_ambient_pressure(&mut self, pressure: u32) -> Result<(), Error<E>> {
+    /// between 700-1200 HPa. The default value is 1013 HPa.
+    pub async fn set_ambient_pressure(&mut self, pressure: u16) -> Result<(), Error<E>> {
         self.inner.set_ambient_pressure(pressure).await
     }
 
     /// The `get_ambient_pressure` command can be sent during periodic
     /// measurements to read out the previously  saved ambient pressure value
     /// set by the `set_ambient_pressure` command.
-    pub async fn get_ambient_pressure(&mut self) -> Result<u32, Error<E>> {
+    pub async fn get_ambient_pressure(&mut self) -> Result<u16, Error<E>> {
         self.inner.get_ambient_pressure().await
     }
 
@@ -324,15 +324,15 @@ where
     /// based on a previously set sensor altitude. Use of this command is
     /// highly recommended for applications experiencing significant ambient
     /// pressure changes to ensure sensor accuracy. Valid input values are
-    /// between 70_000 – 120_000 Pa. The default value is 101_300 Pa.
-    pub async fn set_ambient_pressure(&mut self, pressure: u32) -> Result<(), Error<E>> {
+    /// between 700-1200 HPa. The default value is 1013 HPa.
+    pub async fn set_ambient_pressure(&mut self, pressure: u16) -> Result<(), Error<E>> {
         self.inner.set_ambient_pressure(pressure).await
     }
 
     /// The `get_ambient_pressure` command can be sent during periodic
     /// measurements to read out the previously  saved ambient pressure value
     /// set by the `set_ambient_pressure` command.
-    pub async fn get_ambient_pressure(&mut self) -> Result<u32, Error<E>> {
+    pub async fn get_ambient_pressure(&mut self) -> Result<u16, Error<E>> {
         self.inner.get_ambient_pressure().await
     }
 
@@ -648,23 +648,22 @@ where
         Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
-    async fn set_ambient_pressure(&mut self, pressure: u32) -> Result<(), Error<E>> {
-        if !AMBIENT_PRESSURE_RANGE_PA.contains(&pressure) {
+    async fn set_ambient_pressure(&mut self, pressure: u16) -> Result<(), Error<E>> {
+        if !AMBIENT_PRESSURE_RANGE_HPA.contains(&pressure) {
             return Err(Error::InvalidInput);
         }
 
-        let pressure = (pressure / 100) as u16;
         self.write_command_with_data(SET_AMBIENT_PRESSURE, pressure)
             .await?;
         Ok(())
     }
 
-    async fn get_ambient_pressure(&mut self) -> Result<u32, Error<E>> {
+    async fn get_ambient_pressure(&mut self) -> Result<u16, Error<E>> {
         let mut buf = [0; 3];
         self.command_with_response(GET_AMBIENT_PRESSURE, &mut buf)
             .await?;
 
-        Ok(u16::from_be_bytes([buf[0], buf[1]]) as u32 * 100)
+        Ok(u16::from_be_bytes([buf[0], buf[1]]))
     }
 
     async fn enable_automatic_self_calibration(&mut self, enabled: bool) -> Result<(), Error<E>> {

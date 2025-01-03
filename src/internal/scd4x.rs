@@ -2,8 +2,12 @@ use crate::internal::common::opcode_with_data_into_payload;
 use core::ops::Range;
 
 pub const I2C_ADDRESS: u8 = 0x62;
+
+// Section 3.7.3 of teh datasheet
 pub const MAX_ALTITUDE: u16 = 3_000;
-pub const AMBIENT_PRESSURE_RANGE_PA: Range<u32> = 70_000..120_001;
+
+// Section 3.7.5 of the datasheet
+pub const AMBIENT_PRESSURE_RANGE_HPA: Range<u16> = 700..1201;
 
 // Section 3.8.1 from the datasheet
 // A return value of 0xFFFF indicates that the FRC has failed

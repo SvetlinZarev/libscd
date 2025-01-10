@@ -155,6 +155,11 @@ pub fn decode_frc_status(buf: [u8; 3]) -> Option<i16> {
     Some(frc_correction as i16)
 }
 
+pub fn decode_has_data_ready(buf: [u8; 3]) -> bool {
+    let status = u16::from_be_bytes([buf[0], buf[1]]);
+    (status & 0x07FF) != 0
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

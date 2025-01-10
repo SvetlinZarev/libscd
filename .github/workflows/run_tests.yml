@@ -37,17 +37,17 @@ jobs:
       - name: Clippy (async, scd30)
         run: cargo clippy --features "async, scd30"
 
-      - name: Test sync SCD40
-        run: cargo test --features "sync, scd40"
+      - name: Test sync SCD4x
+        run: cargo test --features "sync, scd4x"
 
-      - name: Clippy (sync, scd40)
-        run: cargo clippy --features "sync, scd40"
+      - name: Clippy (sync, scd4x)
+        run: cargo clippy --features "sync, scd4x"
 
-      - name: Test async SCD40
-        run: cargo test --features "async, scd40"
+      - name: Test async SCD4x
+        run: cargo test --features "async, scd4x"
 
-      - name: Clippy (async, scd40)
-        run: cargo clippy --features "async, scd40"
+      - name: Clippy (async, scd4x)
+        run: cargo clippy --features "async, scd4x"
 
       - name: Test sync SCD41
         run: cargo test --features "sync, scd41"
@@ -61,12 +61,12 @@ jobs:
       - name: Clippy (async, scd41)
         run: cargo clippy --features "async, scd41"
 
-      - name: Build example - Synchronous SCD40
-        working-directory: ./examples/embassy-scd40
+      - name: Build example - Synchronous SCD4x
+        working-directory: ./examples/embassy-scd4x
         run: cargo check
 
-      - name: Lint example - Synchronous SCD40
-        working-directory: ./examples/embassy-scd40
+      - name: Lint example - Synchronous SCD4x
+        working-directory: ./examples/embassy-scd4x
         run: cargo clippy
 
       - name: Verify code is properly formatted

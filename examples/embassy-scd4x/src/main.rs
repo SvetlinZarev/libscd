@@ -5,13 +5,13 @@ use defmt::*;
 #[allow(unused)]
 use defmt_rtt as _;
 use embassy_executor::Spawner;
-use embassy_stm32::{bind_interrupts, i2c, peripherals};
 use embassy_stm32::dma::NoDma;
 use embassy_stm32::i2c::I2c;
 use embassy_stm32::time::Hertz;
+use embassy_stm32::{bind_interrupts, i2c, peripherals};
 use embassy_time::Delay;
 use embedded_hal::delay::DelayNs;
-use libscd::synchronous::scd4x::Scd40;
+use libscd::synchronous::scd4x::Scd4x;
 #[allow(unused)]
 use panic_probe as _;
 
@@ -35,7 +35,7 @@ async fn main(_spawner: Spawner) {
         Default::default(),
     );
 
-    let mut scd = Scd40::new(i2c, Delay);
+    let mut scd = Scd4x::new(i2c, Delay);
 
     // When re-programming, the controller will be restarted,
     // but not the sensor. We try to stop it in order to
@@ -50,7 +50,10 @@ async fn main(_spawner: Spawner) {
     loop {
         if scd.data_ready().unwrap() {
             let m = scd.read_measurement().unwrap();
-            info!("CO2: {}\nHumidity: {}\nTemperature: {}", m.co2, m.humidity, m.temperature)
+            info!(
+                "CO2: {}\nHumidity: {}\nTemperature: {}",
+                m.co2, m.humidity, m.temperature
+            )
         }
 
         Delay.delay_ms(1000)

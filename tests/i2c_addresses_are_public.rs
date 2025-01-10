@@ -1,7 +1,9 @@
+#![deny(unexpected_cfgs)]
+
 #[cfg(feature = "scd30")]
 const SCD_30_ADDRESS: u8 = 0x61;
 
-#[cfg(any(feature = "scd40", feature = "scd41"))]
+#[cfg(any(feature = "scd4x", feature = "scd41"))]
 const SCD_4X_ADDRESS: u8 = 0x62;
 
 #[test]
@@ -11,7 +13,7 @@ pub fn scd30_async_has_i2c_address() {
 }
 
 #[test]
-#[cfg(all(feature = "scd40", feature = "async"))]
+#[cfg(all(feature = "scd4x", feature = "async"))]
 pub fn scd40_async_has_i2c_address() {
     assert_eq!(SCD_4X_ADDRESS, libscd::asynchronous::scd4x::I2C_ADDRESS);
 }
@@ -29,7 +31,7 @@ pub fn scd30_sync_has_i2c_address() {
 }
 
 #[test]
-#[cfg(all(feature = "scd40", feature = "sync"))]
+#[cfg(all(feature = "scd4x", feature = "sync"))]
 pub fn scd40_sync_has_i2c_address() {
     assert_eq!(SCD_4X_ADDRESS, libscd::synchronous::scd4x::I2C_ADDRESS);
 }

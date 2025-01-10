@@ -36,7 +36,7 @@ async fn main(_spawner: Spawner) {
         Default::default(),
     );
 
-    let mut scd = Scd40::new(i2c, Delay);
+    let mut scd = Scd4x::new(i2c, Delay);
 
     // When re-programming, the controller will be restarted,
     // but not the sensor. We try to stop it in order to
@@ -63,14 +63,14 @@ async fn main(_spawner: Spawner) {
 
 The support for each sensor and sync/async mode is controlled by a feature:
 
-| Feature | Description                                                         |
-|---------|---------------------------------------------------------------------|
-| sync    | Enables the blocking driver implementation for the selected sensors |
-| async   | Enables the async driver implementation for the selected sensors    |
-| scd30   | Enables the driver for the SCD30 sensor                             |
-| scd40   | Enables the driver for the SCD40 sensor                             |
-| scd41   | Enables the driver for the SCD41 sensor                             |
-| defmt   | Derive `defmt::Format` for the error type                           |
+| Feature | Description                                                                 |
+|---------|-----------------------------------------------------------------------------|
+| sync    | Enables the blocking driver implementation for the selected sensors         |
+| async   | Enables the async driver implementation for the selected sensors            |
+| scd30   | Enables the driver for the SCD30 sensor                                     |
+| scd4x   | Enables the driver for the SCD4x family of sensors                          |
+| scd41   | Enables additional SCD4x driver features available only on the SCD41 sensor |
+| defmt   | Derive `defmt::Format` for the error type                                   |
 
 ## License
 

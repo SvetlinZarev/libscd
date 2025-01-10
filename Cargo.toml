@@ -21,7 +21,7 @@ defmt = ["dep:defmt"]
 sync = ["dep:embedded-hal"]
 async = ["dep:embedded-hal-async"]
 scd30 = []
-scd40 = []
+scd4x = []
 scd41 = []
 
 [dependencies]

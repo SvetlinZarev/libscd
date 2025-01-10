@@ -14,9 +14,9 @@ panic-probe = { version = "0.3", features = ["print-defmt"] }
 embedded-hal = "1"
 
 ### Embassy
-embassy-stm32 = { version = "0.1", features = ["defmt", "stm32f411ce", "time-driver-tim3", "exti", "memory-x", "unstable-pac"] }
-embassy-executor = { version = "0.6.3", features = ["task-arena-size-8192", "arch-cortex-m", "executor-thread", "defmt", "integrated-timers"] }
-embassy-time = { version = "0.3", features = ["defmt", "defmt-timestamp-uptime", "tick-hz-32_768"] }
+embassy-stm32 = { version = "0.2", features = ["defmt", "stm32f411ce", "time-driver-tim3", "exti", "memory-x", "unstable-pac"] }
+embassy-executor = { version = "0.7", features = ["task-arena-size-8192", "arch-cortex-m", "executor-thread", "defmt"] }
+embassy-time = { version = "0.4", features = ["defmt", "defmt-timestamp-uptime", "tick-hz-32_768"] }
 
 ### Logging
 defmt = "0.3"

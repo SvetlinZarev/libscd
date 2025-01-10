@@ -1,5 +1,5 @@
 [package]
-name = "embassy-scd40"
+name = "embassy-scd4x"
 version = "0.0.0"
 edition = "2021"
 
@@ -25,4 +25,4 @@ defmt-rtt = "0.4"
 ### Sensors
 [dependencies.libscd]
 path = "../../"
-features = ["sync", "scd40", "defmt"]
+features = ["sync", "scd4x", "defmt"]

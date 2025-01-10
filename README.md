@@ -24,14 +24,10 @@ Then we can start consuming data from SCD40 using blocking I2C communication:
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
-
-    let i2c = I2c::new(
+    let i2c = I2c::new_blocking(
         p.I2C2,
         p.PB10,
         p.PB3,
-        Irqs,
-        NoDma,
-        NoDma,
         Hertz(100_000),
         Default::default(),
     );

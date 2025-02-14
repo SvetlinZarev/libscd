@@ -15,7 +15,7 @@ Add the crate as a dependency in `Cargo.toml` and select the required features:
 
 ```toml
 [dependencies.libscd]
-version = "0.4"
+version = "0.5"
 features = ["defmt", "sync", "scd40"]
 ```
 
@@ -55,6 +55,17 @@ async fn main(_spawner: Spawner) {
     }
 }
 ```
+
+## Migrating from v0.4
+
+Version 0.5 contains breaking changes:
+
+* The SCD40 and SCD41 sensors are exposed via common type - SCD4x. The old
+  structures are no longer available.
+* The `scd40` crate feature is renamed to `scd4x`
+* SCD4x use `HPa` instead of `Pa` for setting/getting the ambient pressure
+* The `Measurement` type is no longer reexported by each sensor. The
+  common shared type should be used instead.
 
 ## Crate Feature Flags
 

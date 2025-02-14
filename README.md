@@ -1,6 +1,6 @@
 # Lib SCD
 
-![License](https://img.shields.io/crates/l/libscd)
+[![License](https://img.shields.io/crates/l/libscd)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/crates/v/libscd)](https://crates.io/crates/libscd)
 [![Downloads](https://img.shields.io/crates/d/libscd)](https://crates.io/crates/libscd)
 [![Docs](https://img.shields.io/docsrs/libscd)](https://docs.rs/libscd/latest/libscd/)
@@ -71,5 +71,4 @@ The support for each sensor and sync/async mode is controlled by a feature:
 
 ## License
 
-The project is dual licensed under [MIT](https://opensource.org/licenses/MIT)
-or [APACHE-2.0](https://opensource.org/licenses/Apache-2.0)
+The project is licensed under [MIT](https://opensource.org/licenses/MIT) license

@@ -43,4 +43,4 @@ pub(crate) mod internal;
     any(feature = "sync", feature = "async"),
     any(feature = "scd30", feature = "scd4x", feature = "scd41")
 )))]
-const _: () = assert!(false, "You must select at least one sensor (scd30/scd4x/scd41) and at least one mode of operation (sync/async)");
+compile_error!("You must select at least one sensor (scd30/scd4x/scd41) and at least one mode of operation (sync/async)");

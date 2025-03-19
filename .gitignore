@@ -1,5 +1,6 @@
 ### Ignore
 /.idea
+/.vscode
 /target
 /examples/**/target
 **/.*
@@ -9,4 +10,3 @@
 !.gitignore
 !.cargo
 !.github
-!.vscode

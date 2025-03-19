@@ -16,10 +16,10 @@ Add the crate as a dependency in `Cargo.toml` and select the required features:
 ```toml
 [dependencies.libscd]
 version = "0.5"
-features = ["defmt", "sync", "scd40"]
+features = ["defmt", "sync", "scd4x"]
 ```
 
-Then we can start consuming data from SCD40 using blocking I2C communication:
+Then we can start consuming data from SCD4x using blocking I2C communication:
 
 ```rust
 #[embassy_executor::main]

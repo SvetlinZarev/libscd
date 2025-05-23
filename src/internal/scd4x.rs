@@ -1,6 +1,7 @@
 use crate::error::Error;
 use crate::internal::common::opcode_with_data_into_payload;
 use crate::measurement::Measurement;
+use crate::SensorVariant;
 use core::ops::Range;
 
 pub const I2C_ADDRESS: u8 = 0x62;
@@ -46,6 +47,7 @@ pub const GET_SERIAL_NUMBER: Command = Command::new(0x3682, 1, false);
 pub const PERFORM_SELF_TEST: Command = Command::new(0x3639, 10_000, false);
 pub const PERFORM_FACTORY_RESET: Command = Command::new(0x3632, 1_200, false);
 pub const REINIT: Command = Command::new(0x3646, 30, false);
+pub const GET_SENSOR_VARIANT: Command = Command::new(0x202F, 1, true);
 
 #[cfg(feature = "scd41")]
 pub const MEASURE_SINGLE_SHOT: Command = Command::new(0x219d, 5_000, false);
@@ -93,6 +95,21 @@ impl Command {
 
     pub const fn prepare_with_data(self, data: u16) -> [u8; 5] {
         opcode_with_data_into_payload(self.op_code, data)
+    }
+}
+
+// section 3.10.6
+pub fn decode_sensor_variant(buf: [u8; 3]) -> Option<SensorVariant> {
+    const MASK: u16 = 0xF000;
+    const SHIFT: u16 = 12;
+
+    let word = u16::from_be_bytes([buf[0], buf[1]]);
+    let decoded = (word & MASK) >> SHIFT;
+    match decoded {
+        0b0000 => Some(SensorVariant::Scd40),
+        0b0001 => Some(SensorVariant::Scd41),
+        0b0101 => Some(SensorVariant::Scd43),
+        _ => None,
     }
 }
 
@@ -164,8 +181,33 @@ pub fn decode_has_data_ready(buf: [u8; 3]) -> bool {
 mod tests {
     use super::*;
     use crate::internal::crc::crc8;
+    use crate::SensorVariant;
 
     const F32_TOLERANCE: f32 = 0.005;
+
+    #[test]
+    fn test_decode_scd40() {
+        assert_eq!(
+            Some(SensorVariant::Scd40),
+            decode_sensor_variant([0x04, 0x40, 0x51])
+        );
+    }
+
+    #[test]
+    fn test_decode_scd41() {
+        assert_eq!(
+            Some(SensorVariant::Scd41),
+            decode_sensor_variant([0x14, 0x40, 0x3F])
+        );
+    }
+
+    #[test]
+    fn test_decode_scd43() {
+        assert_eq!(
+            Some(SensorVariant::Scd43),
+            decode_sensor_variant([0x54, 0x41, 0xE9])
+        );
+    }
 
     #[test]
     fn test_decode_serial_number() {

@@ -6,7 +6,7 @@
 [![Docs](https://img.shields.io/docsrs/libscd)](https://docs.rs/libscd/latest/libscd/)
 [![Build](https://img.shields.io/github/actions/workflow/status/SvetlinZarev/libscd/run_tests.yml)](https://github.com/SvetlinZarev/libscd/actions)
 
-LibSCD is s Rust driver implementation for SCD30, SCD40 and SCD41 sensors
+LibSCD is s Rust driver implementation for SCD30, SCD40, SCD41 and SCD43 sensors
 using the `embedded-hal` and `embedded-hal-async` interfaces.
 
 ## Usage
@@ -60,7 +60,7 @@ async fn main(_spawner: Spawner) {
 
 Version 0.5 contains breaking changes:
 
-* The SCD40 and SCD41 sensors are exposed via common type - SCD4x. The old
+* The SCD4x family of sensors are exposed via common type - SCD4x. The old
   structures are no longer available.
 * The `scd40` crate feature is renamed to `scd4x`
 * SCD4x use `HPa` instead of `Pa` for setting/getting the ambient pressure
@@ -71,14 +71,14 @@ Version 0.5 contains breaking changes:
 
 The support for each sensor and sync/async mode is controlled by a feature:
 
-| Feature | Description                                                                 |
-|---------|-----------------------------------------------------------------------------|
-| sync    | Enables the blocking driver implementation for the selected sensors         |
-| async   | Enables the async driver implementation for the selected sensors            |
-| scd30   | Enables the driver for the SCD30 sensor                                     |
-| scd4x   | Enables the driver for the SCD4x family of sensors                          |
-| scd41   | Enables additional SCD4x driver features available only on the SCD41 sensor |
-| defmt   | Derive `defmt::Format` for the error type                                   |
+| Feature | Description                                                                            |
+|---------|----------------------------------------------------------------------------------------|
+| sync    | Enables the blocking driver implementation for the selected sensors                    |
+| async   | Enables the async driver implementation for the selected sensors                       |
+| scd30   | Enables the driver for the SCD30 sensor                                                |
+| scd4x   | Enables the driver for the SCD4x family of sensors                                     |
+| scd41   | Enables additional SCD4x driver features available only on the SCD41 and SCD43 sensors |
+| defmt   | Derive `defmt::Format` for the error type                                              |
 
 ## License
 

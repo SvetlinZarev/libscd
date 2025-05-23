@@ -39,6 +39,17 @@ pub mod asynchronous;
 #[doc(hidden)]
 pub(crate) mod internal;
 
+/// SCD4x sensor variant.
+#[cfg(any(feature = "scd4x", feature = "scd41"))]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[non_exhaustive]
+pub enum SensorVariant {
+    Scd40,
+    Scd41,
+    Scd43,
+}
+
 #[cfg(not(all(
     any(feature = "sync", feature = "async"),
     any(feature = "scd30", feature = "scd4x", feature = "scd41")

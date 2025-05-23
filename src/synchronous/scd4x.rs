@@ -7,13 +7,13 @@ use embedded_hal::delay::DelayNs;
 use embedded_hal::i2c::I2c;
 
 use crate::internal::scd4x::{
-    decode_frc_status, decode_has_data_ready, decode_measurement, decode_serial_number,
-    decode_temperature_offset, encode_temperature_offset, Command, AMBIENT_PRESSURE_RANGE_HPA,
-    GET_AMBIENT_PRESSURE, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
+    decode_frc_status, decode_has_data_ready, decode_measurement, decode_sensor_variant,
+    decode_serial_number, decode_temperature_offset, encode_temperature_offset, Command,
+    AMBIENT_PRESSURE_RANGE_HPA, GET_AMBIENT_PRESSURE, GET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
     GET_AUTOMATIC_SELF_CALIBRATION_TARGET, GET_DATA_READY_STATUS, GET_SENSOR_ALTITUDE,
-    GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, MAX_ALTITUDE, PERFORM_FACTORY_RESET,
-    PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST, PERSIST_SETTINGS, READ_MEASUREMENT, REINIT,
-    SET_AMBIENT_PRESSURE, SET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
+    GET_SENSOR_VARIANT, GET_SERIAL_NUMBER, GET_TEMPERATURE_OFFSET, MAX_ALTITUDE,
+    PERFORM_FACTORY_RESET, PERFORM_FORCED_RECALIBRATION, PERFORM_SELF_TEST, PERSIST_SETTINGS,
+    READ_MEASUREMENT, REINIT, SET_AMBIENT_PRESSURE, SET_AUTOMATIC_SELF_CALIBRATION_ENABLED,
     SET_AUTOMATIC_SELF_CALIBRATION_TARGET, SET_SENSOR_ALTITUDE, SET_TEMPERATURE_OFFSET,
     START_LOW_POWER_PERIODIC_MEASUREMENT, START_PERIODIC_MEASUREMENT, STOP_PERIODIC_MEASUREMENT,
 };
@@ -25,6 +25,7 @@ use crate::internal::scd4x::{
     SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD,
     WAKE_UP,
 };
+use crate::SensorVariant;
 
 /// Driver implementation for the SCD4x family of CO2 sensors. This driver is
 /// compatible with both SCD40 and SCD41 devices.
@@ -280,6 +281,13 @@ where
         let mut buf = [0; 9];
         self.command_with_response(GET_SERIAL_NUMBER, &mut buf)?;
         Ok(decode_serial_number(buf))
+    }
+
+    // Read out the sensor variant (scd40, scd41, scd43)
+    pub fn sensor_variant(&mut self) -> Result<Option<SensorVariant>, Error<E>> {
+        let mut buf = [0; 3];
+        self.command_with_response(GET_SENSOR_VARIANT, &mut buf)?;
+        Ok(decode_sensor_variant(buf))
     }
 
     /// The `perform_self_test()` command can be used as an end-of-line

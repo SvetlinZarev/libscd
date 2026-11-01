@@ -20,10 +20,10 @@ use crate::internal::scd4x::{
 
 #[cfg(feature = "scd41")]
 use crate::internal::scd4x::{
-    GET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, GET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD,
-    MEASURE_SINGLE_SHOT, MEASURE_SINGLE_SHOT_RHT_ONLY, POWER_DOWN,
-    SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD,
-    WAKE_UP,
+    ASC_PERIOD_STEP_HOURS, GET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD,
+    GET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, MEASURE_SINGLE_SHOT,
+    MEASURE_SINGLE_SHOT_RHT_ONLY, POWER_DOWN, SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD,
+    SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, WAKE_UP,
 };
 use crate::SensorVariant;
 
@@ -350,7 +350,15 @@ where
     /// serial number (Section 3.9.2).
     #[cfg(feature = "scd41")]
     pub fn wake_up(&mut self) -> Result<(), Error<E>> {
-        self.write_command(WAKE_UP)
+        self.check_is_command_allowed(WAKE_UP)?;
+
+        // The missing ACK makes the bus report an error even when the sensor
+        // wakes up. Ignore it and always wait for the wake-up time, the same
+        // as the Sensirion reference driver does.
+        let _ = i2c_write(&mut self.i2c, I2C_ADDRESS, &WAKE_UP.prepare());
+        self.delay.delay_ms(WAKE_UP.exec_time as u32);
+
+        Ok(())
     }
 
     #[cfg(feature = "scd41")]
@@ -358,6 +366,10 @@ where
         &mut self,
         hours: u16,
     ) -> Result<(), Error<E>> {
+        if !hours.is_multiple_of(ASC_PERIOD_STEP_HOURS) {
+            return Err(Error::InvalidInput);
+        }
+
         self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_INITIAL_PERIOD, hours)
     }
 
@@ -374,6 +386,10 @@ where
         &mut self,
         hours: u16,
     ) -> Result<(), Error<E>> {
+        if !hours.is_multiple_of(ASC_PERIOD_STEP_HOURS) {
+            return Err(Error::InvalidInput);
+        }
+
         self.write_command_with_data(SET_AUTOMATIC_SELF_CALIBRATION_STANDARD_PERIOD, hours)
     }
 

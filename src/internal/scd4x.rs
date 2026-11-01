@@ -12,6 +12,11 @@ pub const MAX_ALTITUDE: u16 = 3_000;
 // Section 3.7.5 of the datasheet
 pub const AMBIENT_PRESSURE_RANGE_HPA: Range<u16> = 700..1201;
 
+// Sections 3.11.5 and 3.11.7 of the datasheet: the ASC periods must be
+// integer multiples of 4 hours
+#[cfg(feature = "scd41")]
+pub const ASC_PERIOD_STEP_HOURS: u16 = 4;
+
 // Constant used in several data conversions such as in the temperature offset
 const TWO_P16_M1: f32 = u16::MAX as f32; // `2.pow(16) - 1`
 
@@ -47,7 +52,7 @@ pub const GET_SERIAL_NUMBER: Command = Command::new(0x3682, 1, false);
 pub const PERFORM_SELF_TEST: Command = Command::new(0x3639, 10_000, false);
 pub const PERFORM_FACTORY_RESET: Command = Command::new(0x3632, 1_200, false);
 pub const REINIT: Command = Command::new(0x3646, 30, false);
-pub const GET_SENSOR_VARIANT: Command = Command::new(0x202F, 1, true);
+pub const GET_SENSOR_VARIANT: Command = Command::new(0x202F, 1, false);
 
 #[cfg(feature = "scd41")]
 pub const MEASURE_SINGLE_SHOT: Command = Command::new(0x219d, 5_000, false);

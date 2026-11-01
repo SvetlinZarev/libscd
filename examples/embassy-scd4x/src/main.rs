@@ -7,7 +7,6 @@ use defmt::*;
 use defmt_rtt as _;
 use embassy_executor::Spawner;
 use embassy_stm32::i2c::I2c;
-use embassy_stm32::time::Hertz;
 use embassy_time::Delay;
 use embedded_hal::delay::DelayNs;
 use libscd::synchronous::scd4x::Scd4x;
@@ -17,7 +16,7 @@ use panic_probe as _;
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
     let p = embassy_stm32::init(Default::default());
-    let i2c = I2c::new_blocking(p.I2C2, p.PB10, p.PB3, Hertz(100_000), Default::default());
+    let i2c = I2c::new_blocking(p.I2C2, p.PB10, p.PB3, Default::default());
     let mut scd = Scd4x::new(i2c, Delay);
 
     // When re-programming, the controller will be restarted,

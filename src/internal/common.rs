@@ -9,7 +9,9 @@ pub fn assert_chunked_with_len3(buf: &[u8]) {
 }
 
 pub fn crc8_verify_chunked_3(data: &[u8]) -> bool {
-    data.chunks_exact(3)
+    data.as_chunks::<3>()
+        .0
+        .iter()
         .map(|w| (crc8(&w[..2]), w[2]))
         .all(|(x, y)| x == y)
 }
